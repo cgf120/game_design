@@ -1,3 +1,6 @@
+import type { InventorySlot } from './item';
+import type { PlayerSectInfo } from './sect';
+
 // Core interfaces for the Player
 
 export interface PlayerStats {
@@ -5,6 +8,8 @@ export interface PlayerStats {
     def: number;
     hp: number;
     maxHp: number;
+    mp: number; // Spirit / Mana
+    maxMp: number;
     critRate: number; // 0-1
     dodgeRate: number; // 0-1
 }
@@ -37,6 +42,11 @@ export interface Player {
     spiritRoot: SpiritRoot;
     equipment: PlayerEquipment;
     sect?: PlayerSectInfo;
+    skills: {
+        learned: string[];
+        equipped: string[];
+    };
+    inventory: InventorySlot[];
 
     // Resources
     spiritStones: number; // 灵石

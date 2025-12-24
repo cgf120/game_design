@@ -12,6 +12,7 @@ export function useGameLoop() {
         // Base gain = 5 + modifiers (todo)
         const expGain = 5;
         playerStore.addExp(expGain);
+        playerStore.regenStats(); // Added passive regen
 
         // 2. Resource Production (Spirit Stones) - todo
         // 3. Auto-save is now reactive in stores, no need for loop check

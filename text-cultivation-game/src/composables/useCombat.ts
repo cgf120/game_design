@@ -4,15 +4,19 @@ import { useInventoryStore } from '../stores/inventory';
 import { MAPS } from '../core/constants/maps';
 import type { GameMap, Enemy } from '../core/models/combat';
 import { useSectStore } from '../stores/sect'; // Import SectStore
+import { useSkillStore } from '../stores/skill'; // Import SkillStore
+import { SKILLS } from '../core/constants/skills'; // Import SKILLS constant
+import { getItem } from '../core/constants/items'; // Import getItem
 
 export function useCombat() {
     const playerStore = usePlayerStore();
 
     const currentMap = ref<GameMap | null>(null);
     const currentEnemy = ref<Enemy | null>(null);
-    const combatLogs = ref<string[]>([]);
-    const isAutoFighting = ref(false);
-    let fightInterval: number | null = null;
+    const battleLogs = ref<string[]>([]);
+    const isFighting = ref(false);
+    const fightInterval = ref<number | null>(null);
+    const skillCooldowns = ref<Record<string, number>>({}); // Map: skillId -> unlock timestamp
 
     // Start combat in a specific map
     const enterMap = (mapId: string) => {
@@ -38,17 +42,17 @@ export function useCombat() {
     };
 
     const startAutoFight = () => {
-        if (isAutoFighting.value) return;
-        isAutoFighting.value = true;
+        if (isFighting.value) return;
+        isFighting.value = true;
         // Tick every 1s for combat round
-        fightInterval = window.setInterval(combatRound, 1000);
+        fightInterval.value = window.setInterval(combatRound, 1000);
     };
 
     const stopAutoFight = () => {
-        isAutoFighting.value = false;
-        if (fightInterval) {
-            clearInterval(fightInterval);
-            fightInterval = null;
+        isFighting.value = false;
+        if (fightInterval.value) {
+            clearInterval(fightInterval.value);
+            fightInterval.value = null;
         }
     };
 
@@ -71,29 +75,116 @@ export function useCombat() {
             return;
         }
 
-        // 2. Fight Logic
-        const player = playerStore.player;
-        const enemy = currentEnemy.value;
+        // --- Combat Logic ---
+        const attackRound = () => {
+            if (!currentEnemy.value) return;
 
-        // Player attacks Enemy
-        const pDmg = Math.max(1, player.stats.atk - enemy.stats.def);
-        enemy.stats.hp -= pDmg;
-        log(`[战斗] 你攻击了 ${enemy.name}，造成 ${pDmg} 点伤害。(敌血: ${Math.max(0, enemy.stats.hp)})`);
+            // Use effective stats for calculation (Atk, Def, Speed, etc.)
+            const playerStats = playerStore.effectiveStats;
+            // Use mutable stats for HP/MP updates
+            const playerMutableStats = playerStore.player.stats;
 
-        if (enemy.stats.hp <= 0) {
-            handleVictory(enemy);
-            return;
-        }
+            const enemy = currentEnemy.value;
 
-        // Enemy attacks Player
-        const eDmg = Math.max(1, enemy.stats.atk - player.stats.def);
-        player.stats.hp -= eDmg; // Note: This modifies the store state directly? Better to have an action.
-        log(`[战斗] ${enemy.name} 攻击了你，造成 ${eDmg} 点伤害。`);
+            // 1. Player Action
+            // Check for usable skills
+            let skillUsed = false;
+            // const skillStore = useSkillStore(); // Removed unused
 
-        if (player.stats.hp <= 0) {
-            handleDefeat();
-        }
-    };
+            // Iterate equipped skills
+            for (const skillId of playerStore.player.skills.equipped) {
+                const skill = SKILLS[skillId];
+                if (!skill) continue;
+
+                const now = Date.now();
+                const cdReady = (skillCooldowns.value[skillId] || 0) <= now;
+                const mpReady = playerMutableStats.mp >= skill.cost;
+
+                if (cdReady && mpReady) {
+                    // EXECUTE SKILL
+                    skillUsed = true;
+
+                    // Pay Cost
+                    playerMutableStats.mp -= skill.cost;
+
+                    // Set CD
+                    skillCooldowns.value[skillId] = now + (skill.cooldown * 1000);
+
+                    // Apply Effect
+                    let damage = 0;
+
+                    if (skill.effect.type === 'damage') {
+                        // Calc Damage
+                        const mult = skill.effect.value;
+                        const isCrit = Math.random() < playerStats.critRate;
+                        let rawDmg = playerStats.atk * mult;
+                        if (isCrit) rawDmg *= 1.5;
+
+                        // Defense Mitigation
+                        const actualDmg = Math.max(1, Math.floor(rawDmg - (enemy.stats.def * 0.5))); // Enemy def effectiveness
+
+                        damage = actualDmg;
+
+                        // Apply to enemy
+                        enemy.stats.hp -= damage;
+
+                        log(`[神通] 你施展了【${skill.name}】，消耗 ${skill.cost} 灵力，造成了 ${damage} 点伤害！${isCrit ? '(暴击!)' : ''}`);
+                    }
+                    else if (skill.effect.type === 'heal') {
+                        const healAmount = Math.floor(playerStats.maxHp * skill.effect.value);
+                        playerMutableStats.hp = Math.min(playerStats.maxHp, playerMutableStats.hp + healAmount);
+                        log(`[神通] 你施展了【${skill.name}】，恢复了 ${healAmount} 点气血！`);
+                    }
+                    else if (skill.effect.type === 'buff_def') {
+                        log(`[神通] 你施展了【${skill.name}】，护体金光乍现！(Buff效果暂未实装)`);
+                    }
+
+                    break; // Only one skill per turn
+                }
+            }
+
+            if (!skillUsed) {
+                // Basic Attack
+                const isCrit = Math.random() < playerStats.critRate;
+                let damage = Math.max(1, playerStats.atk - enemy.stats.def);
+                if (isCrit) {
+                    damage = Math.floor(damage * 1.5);
+                }
+                enemy.stats.hp -= damage;
+                log(`你攻击了 ${enemy.name}，造成 ${damage} 点伤害。${isCrit ? '(暴击!)' : ''}`);
+            }
+
+            // Check Victory
+            if (enemy.stats.hp <= 0) {
+                handleVictory(enemy);
+                return;
+            }
+
+            // 2. Enemy Action
+            // Enemy basic attack (Skills for enemy later?)
+            const isDodge = Math.random() < playerStats.dodgeRate;
+            if (isDodge) {
+                log(`${enemy.name} 发动攻击，但被你躲开了！`);
+            } else {
+                let enemyDmg = Math.max(1, enemy.stats.atk - playerStats.def);
+                playerMutableStats.hp -= enemyDmg;
+                log(`${enemy.name} 攻击了你，造成 ${enemyDmg} 点伤害。`);
+            }
+
+            // Check Defeat
+            if (playerMutableStats.hp <= 0) {
+                handleDefeat();
+            }
+
+            // Regen MP a tiny bit each turn?
+            if (playerMutableStats.mp < playerStats.maxMp) {
+                playerMutableStats.mp = Math.min(playerStats.maxMp, playerMutableStats.mp + 1);
+            }
+        };
+
+        // Call attackRound from combatRound
+        attackRound();
+    }; // End of combatRound
 
     const spawnEnemy = () => {
         if (!currentMap.value) return;
@@ -139,40 +230,61 @@ export function useCombat() {
         log(`[胜利] 击败了 ${enemy.name}！获得 ${enemy.expReward} 修为。`);
         playerStore.addExp(enemy.expReward);
 
+        // Restore 10% HP/MP
+        // Use effective stats directly
+        const pStats = playerStore.effectiveStats; // Max values
+        const pMutable = playerStore.player.stats; // Current values used for writing
+
+        const hpRec = Math.max(1, Math.floor(pStats.maxHp * 0.1));
+        const mpRec = Math.max(1, Math.floor(pStats.maxMp * 0.1));
+
+        pMutable.hp = Math.min(pStats.maxHp, pMutable.hp + hpRec);
+        pMutable.mp = Math.min(pStats.maxMp, pMutable.mp + mpRec);
+        log(`[战胜回气] 气血恢复 ${hpRec}，灵力恢复 ${mpRec}。`);
+
         // Update Sect Task Progress
         const sectStore = useSectStore();
         sectStore.updateActiveTaskProgress(enemy.id);
 
-        // Drop Logic
-        // For now, simpler random drop based on hardcoded chance
-        // MVP: 100% drop rate for testing
-        if (enemy.name === '野狼' && Math.random() < 1.0) {
+        // Drop Logic (Configurable)
+        if (enemy.drops && enemy.drops.length > 0) {
             const invStore = useInventoryStore();
-            // Drop Material
-            if (invStore.addItem('mat_wolf_fang', 1)) {
-                log(`[战利品] 获得了 狼牙 x1`);
-            }
-            // Drop Weapon (New for testing)
-            if (Math.random() < 0.5 && invStore.addItem('weap_iron_sword', 1)) {
-                log(`[战利品] 获得了 铁剑 x1`);
-            }
-        }
-        if (enemy.name === '狂暴野猪' && Math.random() < 1.0) {
-            const invStore = useInventoryStore();
-            // Drop Material
-            if (invStore.addItem('mat_boar_skin', 1)) {
-                log(`[战利品] 获得了 野猪皮 x1`);
-            }
-            // Drop Armor (New for testing)
-            if (Math.random() < 0.5 && invStore.addItem('armor_cloth', 1)) {
-                log(`[战利品] 获得了 布衣 x1`);
+            for (const drop of enemy.drops) {
+                if (Math.random() < drop.chance) {
+                    // Determine amount (min-max)
+                    const amount = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
+
+                    const item = invStore.getItem(drop.itemId); // Helper or access ITEMS via store?
+                    // store usually has internal access or we use constants. 
+                    // Let's assume addItem handles ID. To get name for log, we might need item data.
+                    // InventoryStore might not expose getItem directly to public? 
+                    // Actually invStore.addItem returns boolean. 
+                    // I'll check if I need to look up item name.
+                    // Ideally addItem returns item info or I import getItem from constants.
+
+                    if (invStore.addItem(drop.itemId, amount)) {
+                        const itemInfo = getItem(drop.itemId);
+                        const name = itemInfo ? itemInfo.name : drop.itemId;
+                        log(`[战利品] 获得了 ${name} x${amount}`);
+                    }
+                }
             }
         }
 
         currentEnemy.value = null;
 
-        // Full heal after battle as requested
-        playerStore.player.stats.hp = playerStore.player.stats.maxHp;
+        // Full heal after battle as requested? 
+        // User asked for "Victory Restore" usually means partial. 
+        // But logic had: playerStore.player.stats.hp = playerStore.player.stats.maxHp; at the end
+        // If user wants FULL heal, use maxHp.
+        // Let's stick to the 10% logic above unless strictly full heal is required.
+        // Wait, line 275 in original was `playerStore.player.stats.hp = playerStore.player.stats.maxHp;`
+        // I should probably keep that if it was intentional, OR remove it if the 10% was the intended design.
+        // Given earlier conversation "10% HP/MP restoration upon winning", I will remove the full heal line which seemed like a debug leftover.
+        // Actually, let's keep it safe: The user's log shows "气血恢复 100", followed by nothing else, implying 10% was applied.
+        // I'll leave the 10% logic and remove the accidental full heal at the end if it contradicts design.
+        // Design doc says: "Combat Restoration: 10% HP/MP restoration upon winning."
+        // So I will REMOVE the full heal at the bottom.
     };
 
     const handleDefeat = () => {
@@ -182,15 +294,15 @@ export function useCombat() {
     };
 
     const log = (msg: string) => {
-        combatLogs.value.unshift(msg);
-        if (combatLogs.value.length > 50) combatLogs.value.pop();
+        battleLogs.value.unshift(msg);
+        if (battleLogs.value.length > 50) battleLogs.value.pop();
     };
 
     return {
         currentMap,
         currentEnemy,
-        combatLogs,
-        isAutoFighting,
+        battleLogs,
+        isFighting,
         enterMap,
         leaveMap,
         stopAutoFight

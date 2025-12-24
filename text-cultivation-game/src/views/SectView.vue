@@ -140,9 +140,35 @@
       </div>
 
 
-       <!-- Tab Content: Pavilion (Placeholder) -->
-       <div v-if="activeTab === '藏经阁'" class="text-center text-neutral-500 py-8">
-            <p>藏经阁暂未开放...</p>
+       <!-- Tab Content: Pavilion -->
+       <div v-if="activeTab === '藏经阁'" class="space-y-4">
+            <div class="bg-neutral-800 p-4 rounded border border-neutral-700 mb-4">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-neutral-400">当前贡献: <span class="text-emerald-400">{{ playerSectInfo?.contribution }}</span></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                 <div 
+                    v-for="manual in pavilionManuals" 
+                    :key="manual.id"
+                    class="bg-neutral-800 p-3 rounded border border-neutral-700 flex justify-between items-center"
+                 >
+                    <div class="flex-1">
+                        <div class="text-sm font-bold text-amber-500">{{ manual.name }}</div>
+                        <div class="text-xs text-neutral-500">{{ manual.desc }}</div>
+                        <div class="text-xs text-neutral-400 mt-1">
+                            价格: <span class="text-emerald-400">{{ manual.price }} 贡献</span>
+                        </div>
+                    </div>
+                    <button 
+                        @click="handleExchange(manual)"
+                        class="px-3 py-1 bg-neutral-700 text-neutral-300 rounded text-xs hover:bg-neutral-600 ml-2 border border-neutral-600"
+                    >
+                        兑换
+                    </button>
+                 </div>
+            </div>
        </div>
 
     </div>
@@ -158,8 +184,12 @@ import { getRealm } from '../core/constants/realms';
 import { useModal } from '../composables/useModal';
 import type { SectTask } from '../core/models/sect';
 
+import { useInventoryStore } from '../stores/inventory';
+import { ITEMS } from '../core/constants/items';
+
 const router = useRouter();
 const sectStore = useSectStore();
+const inventoryStore = useInventoryStore(); // Add inventory store
 const { showModal } = useModal();
 
 const availableSects = SECTS;
@@ -167,6 +197,15 @@ const currentSect = computed(() => sectStore.currentSect);
 const currentRank = computed(() => sectStore.currentRank);
 const playerSectInfo = computed(() => sectStore.playerSectInfo);
 const canClaimSalary = computed(() => sectStore.canClaimSalary);
+
+// Pavilion Data (MVP: Hardcoded list of exchangeable items)
+const pavilionManuals = computed(() => {
+    return [
+        { ...ITEMS['manual_sweep'], price: 50 }, // Override price for contribution? Or use item price? Let's assume price in item is Spirit Stones, here is Contribution.
+        { ...ITEMS['manual_meditation_heal'], price: 30 },
+        { ...ITEMS['manual_dragon_storm'], price: 200 },
+    ];
+});
 
 const activeTab = ref('大殿');
 

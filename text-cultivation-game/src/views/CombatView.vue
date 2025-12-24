@@ -49,7 +49,7 @@
 
       <!-- Combat Logs -->
       <div class="flex-1 bg-black/20 rounded p-4 overflow-y-auto font-mono text-xs space-y-1">
-        <div v-for="(log, i) in combatLogs" :key="i" :class="getLogClass(log)">
+        <div v-for="(log, i) in battleLogs" :key="i" :class="getLogClass(log)">
           {{ log }}
         </div>
       </div>
@@ -70,7 +70,7 @@ const route = useRoute();
 const availableMaps = MAPS;
 const currentMap = combat.currentMap;
 const currentEnemy = combat.currentEnemy;
-const combatLogs = combat.combatLogs;
+const battleLogs = combat.battleLogs;
 
 onUnmounted(() => {
   combat.stopAutoFight();

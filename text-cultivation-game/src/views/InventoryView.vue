@@ -68,7 +68,7 @@ import { useModal } from '../composables/useModal';
 
 const inventoryStore = useInventoryStore();
 const { showModal } = useModal();
-const slots = computed(() => inventoryStore.slots);
+const slots = computed(() => inventoryStore.inventory);
 const selectedSlot = ref<InventorySlot | null>(null);
 
 // ... (existing helper functions) ...
@@ -96,8 +96,12 @@ function canEquip(id: string) {
 }
 
 function useItem(id: string) {
-  if (inventoryStore.useItem(id)) {
-    selectedSlot.value = null; 
+  const res = inventoryStore.useItem(id);
+  if (res.success) {
+      showModal({ title: '成功', content: res.msg });
+      selectedSlot.value = null; 
+  } else {
+      showModal({ title: '失败', content: res.msg });
   }
 }
 
