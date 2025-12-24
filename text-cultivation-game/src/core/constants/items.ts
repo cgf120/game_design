@@ -14,6 +14,9 @@ export const ITEMS: Record<string, Item> = {
     'manual_sweep': { id: 'manual_sweep', name: '《横扫千军》残页', type: 'consumable', desc: '记载着大唐官府的入门绝技。使用后学习【横扫千军】。', price: 100, useEffect: { type: 'learn_skill', value: 'skill_sweep' } },
     'manual_dragon_storm': { id: 'manual_dragon_storm', name: '《龙卷雨击》真解', type: 'consumable', desc: '东海龙宫的不传之秘。使用后学习【龙卷雨击】。', price: 500, useEffect: { type: 'learn_skill', value: 'skill_dragon_storm' } },
     'manual_meditation_heal': { id: 'manual_meditation_heal', name: '《气疗术》', type: 'consumable', desc: '基础的疗伤法门。使用后学习【气疗术】。', price: 50, useEffect: { type: 'learn_skill', value: 'skill_meditation_heal' } },
+
+    // Elixirs
+    'pill_foundation': { id: 'pill_foundation', name: '筑基丹', type: 'consumable', desc: '突破筑基期的必备丹药，增加突破成功率。', price: 1000, stackable: true },
 };
 
 export const getItem = (id: string) => ITEMS[id];

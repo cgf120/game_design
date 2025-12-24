@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import type { Player } from '../core/models/player';
-import type { Player, PlayerStats } from '../core/models/player'; // Added PlayerStats type
 import { getRealm } from '../core/constants/realms';
 import { getItem } from '../core/constants/items';
 import { SaveService } from '../core/services/SaveService';
 
+import { SessionManager } from '../core/services/SessionManager';
 import { useInventoryStore } from './inventory';
 
 export const usePlayerStore = defineStore('player', () => {
@@ -174,7 +174,15 @@ export const usePlayerStore = defineStore('player', () => {
         return false;
     }
 
+
+
     function save() {
+        // Prevent saving if we lost the session lock
+        if (!SessionManager.canWrite()) {
+            console.warn('[PlayerStore] Save blocked: Session invalid.');
+            return;
+        }
+
         const inventoryStore = useInventoryStore();
         // Pinia unwraps computed refs, so we access it directly
         SaveService.save(player.value, inventoryStore.inventory);

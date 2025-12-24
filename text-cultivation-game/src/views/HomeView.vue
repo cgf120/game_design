@@ -209,11 +209,11 @@ function manualCultivate() {
 }
 
 function handleBreakthrough() {
-  const success = playerStore.attemptBreakthrough();
-  if (success) {
-    recentLogs.value.unshift(`[突破] 恭喜道友！成功突破至 ${playerStore.currentRealm?.name}！`);
+  const result = playerStore.attemptBreakthrough();
+  if (result.success) {
+    recentLogs.value.unshift(`[突破] ${result.message}`);
   } else {
-    recentLogs.value.unshift(`[突破] 积累不足，突破失败！`);
+    recentLogs.value.unshift(`[突破] ${result.message}`);
   }
 }
 </script>
