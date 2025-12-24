@@ -42,6 +42,7 @@ export const usePlayerStore = defineStore('player', () => {
             armor: undefined,
             accessory: undefined
         },
+        sect: undefined,
         spiritStones: 0,
         immortalStones: 0,
         createTime: Date.now(),
@@ -49,7 +50,7 @@ export const usePlayerStore = defineStore('player', () => {
     };
 
     // Merge saved data
-    const player = ref<Player>(savedPlayer ? { ...defaultState, ...savedPlayer, equipment: savedPlayer.equipment || defaultState.equipment, spiritRoot: savedPlayer.spiritRoot || defaultState.spiritRoot } : defaultState);
+    const player = ref<Player>(savedPlayer ? { ...defaultState, ...savedPlayer, equipment: savedPlayer.equipment || defaultState.equipment, spiritRoot: savedPlayer.spiritRoot || defaultState.spiritRoot, sect: savedPlayer.sect } : defaultState);
 
     // ... (Getters remain the same) ...
     const currentRealm = computed(() => getRealm(player.value.cultivation.realmId));

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import CombatView from '../views/CombatView.vue';
 import InventoryView from '../views/InventoryView.vue';
+import SectView from '../views/SectView.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -16,13 +17,16 @@ const router = createRouter({
             name: 'combat',
             component: CombatView,
         },
-        // Placeholders for other routes to prevent 404s in nav
         {
             path: '/inventory',
             name: 'inventory',
             component: InventoryView
         },
-        { path: '/sect', component: HomeView },
+        {
+            path: '/sect',
+            name: 'sect',
+            component: SectView
+        },
     ],
 });
 

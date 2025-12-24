@@ -27,7 +27,7 @@
       <router-link to="/inventory" class="nav-item">
         <span>行囊</span>
       </router-link>
-      <router-link to="/sect" class="nav-item text-neutral-600">
+      <router-link to="/sect" class="nav-item">
         <span>宗门</span>
       </router-link>
     </nav>

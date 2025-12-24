@@ -62,8 +62,11 @@ import { onUnmounted } from 'vue';
 import { useCombat } from '../composables/useCombat';
 import { MAPS } from '../core/constants/maps';
 import { getRealm } from '../core/constants/realms';
+import { useRoute } from 'vue-router';
+import { onMounted } from 'vue';
 
 const combat = useCombat();
+const route = useRoute();
 const availableMaps = MAPS;
 const currentMap = combat.currentMap;
 const currentEnemy = combat.currentEnemy;
@@ -71,6 +74,17 @@ const combatLogs = combat.combatLogs;
 
 onUnmounted(() => {
   combat.stopAutoFight();
+});
+
+onMounted(() => {
+    // Auto enter map if query param exists
+    const mapId = route.query.map as string;
+    if (mapId && !currentMap.value) {
+        // Small delay to ensure logic is ready?
+        setTimeout(() => {
+            combat.enterMap(mapId);
+        }, 100);
+    }
 });
 
 function getRealmName(id: number) {

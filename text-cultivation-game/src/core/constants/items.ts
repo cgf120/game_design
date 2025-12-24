@@ -18,6 +18,14 @@ export const ITEMS: Record<string, Item> = {
         salePrice: 2,
         stackable: true,
     },
+    'mat_herb': {
+        id: 'mat_herb',
+        name: '灵草',
+        type: 'material',
+        desc: '蕴含微量灵气的药草，是炼丹的基础材料。',
+        salePrice: 1,
+        stackable: true,
+    },
 
     // --- Consumables ---
     'pill_hp_small': {

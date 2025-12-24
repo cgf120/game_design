@@ -3,6 +3,7 @@ import { usePlayerStore } from '../stores/player';
 import { useInventoryStore } from '../stores/inventory';
 import { MAPS } from '../core/constants/maps';
 import type { GameMap, Enemy } from '../core/models/combat';
+import { useSectStore } from '../stores/sect'; // Import SectStore
 
 export function useCombat() {
     const playerStore = usePlayerStore();
@@ -56,6 +57,16 @@ export function useCombat() {
 
         // 1. If no enemy, find one (Respawn logic)
         if (!currentEnemy.value) {
+            // Chance to trigger Gathering Event instead of Enemy Spawn?
+            // For MVP, keep it simple: Enemies drop loot, but we can also auto-gather if no enemy found immediately or add a "gather" state.
+            // Let's make "Gathering" a passive event that can happen when looking for enemies.
+            if (currentMap.value.id === 'm1' && Math.random() < 1.0) {
+                const invStore = useInventoryStore();
+                if (invStore.addItem('mat_herb', 1)) {
+                    log(`[采集] 在路边发现了一株 灵草。`);
+                }
+            }
+
             spawnEnemy();
             return;
         }
@@ -86,7 +97,38 @@ export function useCombat() {
 
     const spawnEnemy = () => {
         if (!currentMap.value) return;
+
+        // Special: Patrol Logic (Dynamic Scaling)
+        if (currentMap.value.id === 'sect_patrol') {
+            // Generate a random enemy based on player level +/- 1
+            const pRealm = playerStore.player.cultivation.realmId;
+            const level = Math.max(1, pRealm + (Math.random() > 0.5 ? 1 : -1));
+
+            // Simple template generator
+            const names = ['黑衣人', '偷药贼', '流窜妖兽'];
+            const name = names[Math.floor(Math.random() * names.length)];
+
+            currentEnemy.value = {
+                id: 'sect_intruder', // FIXED ID for task
+                name,
+                level,
+                realmId: level,
+                stats: {
+                    hp: level * 80,
+                    maxHp: level * 80,
+                    atk: level * 8 + 5,
+                    def: level * 2
+                },
+                expReward: level * 8,
+                drops: []
+            };
+            log(`[遭遇] 巡逻中发现了 ${currentEnemy.value.name}！(Lv.${currentEnemy.value.level})`);
+            return;
+        }
+
         const enemies = currentMap.value.enemies;
+        if (enemies.length === 0) return; // Should not happen for normal maps
+
         const template = enemies[Math.floor(Math.random() * enemies.length)];
         // Clone enemy to avoid modifying the template
         currentEnemy.value = JSON.parse(JSON.stringify(template));
@@ -96,6 +138,10 @@ export function useCombat() {
     const handleVictory = (enemy: Enemy) => {
         log(`[胜利] 击败了 ${enemy.name}！获得 ${enemy.expReward} 修为。`);
         playerStore.addExp(enemy.expReward);
+
+        // Update Sect Task Progress
+        const sectStore = useSectStore();
+        sectStore.updateActiveTaskProgress(enemy.id);
 
         // Drop Logic
         // For now, simpler random drop based on hardcoded chance

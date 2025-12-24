@@ -36,6 +36,7 @@ export interface Player {
     cultivation: CultivationState;
     spiritRoot: SpiritRoot;
     equipment: PlayerEquipment;
+    sect?: PlayerSectInfo;
 
     // Resources
     spiritStones: number; // 灵石

@@ -11,7 +11,7 @@ const createEnemy = (id: string, name: string, realmId: number, hp: number, atk:
 export const MAPS: GameMap[] = [
     {
         id: 'm1',
-        name: '后山外围',
+        name: '后山',
         desc: '宗门后山的外围区域，常有野兽出没。',
         reqRealmId: 1, // 练气一层
         enemies: [
@@ -28,5 +28,12 @@ export const MAPS: GameMap[] = [
             createEnemy('e3', '青蛇', 5, 200, 30, 10, 20),
             createEnemy('e4', '幽灵', 6, 150, 45, 5, 25),
         ]
+    },
+    {
+        id: 'sect_patrol',
+        name: '宗门周边',
+        desc: '宗门巡逻区域，偶尔有宵小之辈出没。',
+        reqRealmId: 1,
+        enemies: [] // Scaled dynamics handled in logic
     }
 ];
