@@ -1,0 +1,32 @@
+import type { GameMap, Enemy } from '../models/combat';
+
+// Helper to create simple enemies
+const createEnemy = (id: string, name: string, realmId: number, hp: number, atk: number, def: number, exp: number): Enemy => ({
+    id, name, level: realmId, realmId,
+    stats: { hp, maxHp: hp, atk, def },
+    expReward: exp,
+    drops: []
+});
+
+export const MAPS: GameMap[] = [
+    {
+        id: 'm1',
+        name: '后山外围',
+        desc: '宗门后山的外围区域，常有野兽出没。',
+        reqRealmId: 1, // 练气一层
+        enemies: [
+            createEnemy('e1', '野狼', 1, 50, 8, 0, 5),
+            createEnemy('e2', '狂暴野猪', 2, 80, 12, 2, 8),
+        ]
+    },
+    {
+        id: 'm2',
+        name: '幽暗密林',
+        desc: '阳光难以穿透的密林，阴气森森。',
+        reqRealmId: 5, // 练气五层
+        enemies: [
+            createEnemy('e3', '青蛇', 5, 200, 30, 10, 20),
+            createEnemy('e4', '幽灵', 6, 150, 45, 5, 25),
+        ]
+    }
+];
