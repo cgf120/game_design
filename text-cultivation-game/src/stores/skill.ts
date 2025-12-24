@@ -9,11 +9,11 @@ export const useSkillStore = defineStore('skill', () => {
 
     // Getters
     const learnedSkills = computed(() => {
-        return playerStore.player.skills?.learned.map(id => SKILLS[id]).filter(Boolean) || [];
+        return (playerStore.player.skills?.learned.map(id => SKILLS[id]).filter(Boolean) || []) as Skill[];
     });
 
     const equippedSkills = computed(() => {
-        return playerStore.player.skills?.equipped.map(id => SKILLS[id]).filter(Boolean) || [];
+        return (playerStore.player.skills?.equipped.map(id => SKILLS[id]).filter(Boolean) || []) as Skill[];
     });
 
     const allSkills = computed(() => SKILLS);

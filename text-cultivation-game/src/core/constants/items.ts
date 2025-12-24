@@ -17,6 +17,9 @@ export const ITEMS: Record<string, Item> = {
 
     // Elixirs
     'pill_foundation': { id: 'pill_foundation', name: '筑基丹', type: 'consumable', desc: '突破筑基期的必备丹药，增加突破成功率。', price: 1000, stackable: true },
+    'pill_gold_core': { id: 'pill_gold_core', name: '金元丹', type: 'consumable', desc: '凝结金丹的辅助丹药，提升结丹概率。', price: 5000, stackable: true },
+    'pill_nascent': { id: 'pill_nascent', name: '凝婴丹', type: 'consumable', desc: '突破元婴期的稀世丹药。', price: 20000, stackable: true },
+    'pill_spirit': { id: 'pill_spirit', name: '化神丹', type: 'consumable', desc: '感悟天地规则，助你化神。', price: 100000, stackable: true },
 };
 
 export const getItem = (id: string) => ITEMS[id];

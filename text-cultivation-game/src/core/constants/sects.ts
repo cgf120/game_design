@@ -8,8 +8,8 @@ const COMMON_RANKS: SectRank[] = [
 ];
 
 const COMMON_TASKS: SectTask[] = [
-    { id: 'task_patrol', name: '山门巡逻', desc: '清理3个宗门附近的宵小之辈。', type: 'hunt', targetId: 'sect_intruder', count: 3, rewardContribution: 10, rewardStones: 5 },
-    { id: 'task_collect_herb', name: '采集药草', desc: '去后山采集一些灵草。', type: 'collect', targetId: 'mat_herb', count: 5, rewardContribution: 20, rewardStones: 10 },
+    { id: 'task_patrol', name: '山门巡逻', desc: '清理3个宗门附近的宵小之辈。', type: 'hunt', targetId: 'sect_intruder', count: 3, rewardContribution: 10, rewardStones: 5, relatedMapId: 'sect_patrol' },
+    { id: 'task_collect_herb', name: '采集药草', desc: '去后山采集一些灵草。', type: 'collect', targetId: 'mat_herb', count: 5, rewardContribution: 20, rewardStones: 10, relatedMapId: 'm1' }, // Linked to Back Mountain (m1)
 ];
 
 export const SECTS: Sect[] = [

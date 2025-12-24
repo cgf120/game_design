@@ -26,4 +26,6 @@ export interface GameMap {
     desc: string;
     reqRealmId: number; // Minimum realm to enter
     enemies: Enemy[]; // Possible enemies in this map
+    category?: string; // Optional grouping
+    isHidden?: boolean; // If true, only shown when condition met (e.g. active task)
 }

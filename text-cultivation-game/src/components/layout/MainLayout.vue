@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-900 text-neutral-200 font-mono flex flex-col">
+  <div class="h-screen overflow-hidden bg-neutral-900 text-neutral-200 font-mono flex flex-col">
     <!-- Top Status Bar -->
     <header class="bg-neutral-800 border-b border-neutral-700 p-2 text-xs flex justify-between items-center sticky top-0 z-10">
       <div class="flex gap-4">
@@ -12,7 +12,7 @@
     </header>
 
     <!-- Main Content Area -->
-    <main class="flex-1 overflow-y-auto p-4 pb-20">
+    <main class="flex-1 relative min-h-0 flex flex-col">
       <slot></slot>
     </main>
 

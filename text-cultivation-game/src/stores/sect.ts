@@ -183,6 +183,16 @@ export const useSectStore = defineStore('sect', () => {
         return { success: true, msg: `任务完成！贡献+${task.rewardContribution}, 灵石+${task.rewardStones}` };
     }
 
+    // Deduct Contribution
+    function deductContribution(amount: number): boolean {
+        if (!playerStore.player.sect) return false;
+        if (playerStore.player.sect.contribution < amount) return false;
+
+        playerStore.player.sect.contribution -= amount;
+        playerStore.save();
+        return true;
+    }
+
     return {
         playerSectInfo,
         currentSect,
@@ -194,6 +204,7 @@ export const useSectStore = defineStore('sect', () => {
         startTask,
         completeTask,
         updateActiveTaskProgress, // Export this
-        canClaimSalary
+        canClaimSalary,
+        deductContribution
     };
 });

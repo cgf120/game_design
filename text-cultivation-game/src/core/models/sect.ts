@@ -16,6 +16,7 @@ export interface SectTask {
     duration?: number; // seconds for patrol
     rewardContribution: number;
     rewardStones: number;
+    relatedMapId?: string;
 }
 
 export interface Sect {

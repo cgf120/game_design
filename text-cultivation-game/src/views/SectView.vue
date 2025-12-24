@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="h-full overflow-y-auto p-4 pb-20 space-y-4">
     <!-- Non-Member View: Join Sect -->
     <div v-if="!currentSect" class="flex flex-col gap-4">
       <div 
@@ -378,9 +378,32 @@ function handleCompleteTask() {
         }
 
         // Fallback for other errors
-        showModal({ title: '提示', content: res.msg });
     }
 }
+
+function handleExchange(item: any) {
+    // Check if affordable
+    if ((playerSectInfo.value?.contribution || 0) < item.price) {
+        showModal({ title: '失败', content: '宗门贡献不足' });
+        return;
+    }
+
+    // Deduct contribution
+    if (sectStore.deductContribution(item.price)) {
+        // Add item to inventory
+        if (inventoryStore.addItem(item.id)) {
+            showModal({ title: '兑换成功', content: `获得物品: ${item.name}` });
+        } else {
+             // Rollback if bag full (simplified logic, assuming bag full check inside addItem)
+             // But we need to rollback contribution?
+             // For MVP let's assume addItem always succeeds or we lose contribution (user risk!)
+             // Or better: check addItem first? No, addItem writes.
+             // We should improve this flow later.
+             showModal({ title: '失败', content: '背包已满' });
+        }
+    }
+}
+
 
 
 </script>

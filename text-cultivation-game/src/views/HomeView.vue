@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="h-full overflow-y-auto p-4 pb-20 space-y-6 scrollbar-hide">
     <!-- Meditation Circle -->
     <div class="flex flex-col items-center justify-center py-8">
       <div class="w-48 h-48 rounded-full border-4 border-neutral-700 flex items-center justify-center relative overflow-hidden bg-neutral-800">
