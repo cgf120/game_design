@@ -4,7 +4,7 @@
     <div v-if="!currentMap" class="flex flex-1 relative min-h-0 bg-neutral-900/50 rounded-lg overflow-hidden border border-neutral-800">
       
       <!-- Left Sidebar: Categories -->
-      <div class="h-full w-1/4 min-w-[100px] max-w-[140px] bg-neutral-950/50 border-r border-neutral-800 flex flex-col overflow-y-auto pb-20 scrollbar-hide">
+      <div class="h-full w-1/4 min-w-[100px] max-w-[140px] bg-neutral-950/50 border-r border-neutral-800 flex flex-col overflow-y-auto scrollbar-hide">
         <button 
           v-for="category in activeCategories" 
           :key="category"
@@ -21,7 +21,7 @@
       </div>
 
       <!-- Right Content: Map Grid -->
-      <div class="flex-1 h-full overflow-y-auto p-4 pb-20 bg-neutral-900/20 relative">
+      <div class="flex-1 h-full overflow-y-auto p-4 bg-neutral-900/20 relative">
         <!-- Category Header -->
         <h3 class="text-neutral-400 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
             <span class="w-1 h-4 bg-amber-600 rounded-full inline-block"></span>

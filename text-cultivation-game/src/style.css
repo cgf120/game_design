@@ -1,3 +1,98 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global Scrollbar Hiding */
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+    display: none;
+}
+
+* {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+:root {
+    /* Backgrounds */
+    --c-void: #0c0c0c;
+    --c-ink-base: #1c1c1e;
+    /* Panel BG */
+    --c-ink-deep: #151517;
+    /* Darker areas */
+
+    /* Text */
+    --c-text-primary: #e0d6c8;
+    /* Warm White */
+    --c-text-secondary: #a09a8e;
+    /* Muted Beige */
+    --c-text-muted: #666055;
+
+    /* Accents */
+    --c-gold: #d4af37;
+    --c-gold-dim: #8a7329;
+    --c-jade: #7fb069;
+    --c-blue: #5bc0de;
+    --c-cinnabar: #d9534f;
+
+    /* Borders */
+    --b-color: #383530;
+    --b-color-gold: #5c4d26;
+}
+
+body {
+    background-color: var(--c-void);
+    color: var(--c-text-primary);
+    font-family: "KaiTi", "STKaiti", "BiauKai", "Georgia", "Times New Roman", serif;
+    /* Fallback stack for Chinese Serif */
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Talisman/Ink Card Style */
+.ink-card {
+    background-color: var(--c-ink-base);
+    border: 1px solid var(--b-color);
+    box-shadow: 0 0 0 1px #000, 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    position: relative;
+    border-radius: 2px;
+    /* Sharper corners for ancient feel */
+}
+
+/* Pseudo-border effect (Optional refined look) */
+.ink-card::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+}
+
+.text-gold {
+    color: var(--c-gold);
+}
+
+.text-jade {
+    color: var(--c-jade);
+}
+
+.text-cinnabar {
+    color: var(--c-cinnabar);
+}
+
+.text-mystic {
+    color: var(--c-blue);
+}
+
+.border-ink {
+    border-color: var(--b-color);
+}
+
+.bg-ink {
+    background-color: var(--c-ink-base);
+}

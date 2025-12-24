@@ -12,23 +12,27 @@ export const useAbodeStore = defineStore('abode', () => {
     // --- Derived Getters ---
     const maxServants = computed(() => abode.value.servants.max);
     const idleServants = computed(() => {
-        const { total, food, wood, iron } = abode.value.servants;
-        return total - (food + wood + iron);
+        const { total, food, wood, iron, herb } = abode.value.servants;
+        // Default herb to 0 if undefined (migration safety)
+        const h = herb || 0;
+        return total - (food + wood + iron + h);
     });
 
     const productionRates = computed(() => {
         // Integer Math for simplicity
         // Food: 2 per worker (Consumes 1, Net +1) -> 1 Farmer supports 1 Miner
+        const s = abode.value.servants;
         return {
-            food: 2 * abode.value.servants.food,
-            wood: 1 * abode.value.servants.wood,
-            iron: 1 * abode.value.servants.iron
+            food: 2 * s.food,
+            wood: 1 * s.wood,
+            iron: 1 * s.iron,
+            herb: 1 * (s.herb || 0) // 1 Herb per worker
         };
     });
 
     const consumptionRates = computed(() => {
-        const { food, wood, iron } = abode.value.servants;
-        const assignedServants = food + wood + iron;
+        const { food, wood, iron, herb } = abode.value.servants;
+        const assignedServants = food + wood + iron + (herb || 0);
         // Consumption: 1.0 Food per assigned worker
         return {
             food: assignedServants * 1.0
@@ -46,10 +50,26 @@ export const useAbodeStore = defineStore('abode', () => {
         };
     });
 
+    // Spirit Garden Costs
+    const spiritGardenCost = computed(() => {
+        const level = abode.value.spiritGardenLevel || 0;
+        if (level === 0) {
+            // Unlock Cost
+            return { wood: 500, iron: 100 };
+        }
+        return {
+            wood: Math.floor(300 * Math.pow(1.5, level)),
+            iron: Math.floor(100 * Math.pow(1.5, level))
+        };
+    });
+
     // --- Actions ---
 
     // Assign Servants
-    function assignServant(job: 'food' | 'wood' | 'iron', count: number): boolean {
+    function assignServant(job: 'food' | 'wood' | 'iron' | 'herb', count: number): boolean {
+        // Migration safety
+        if (job === 'herb' && abode.value.servants.herb === undefined) abode.value.servants.herb = 0;
+
         // Determine direction
         if (count > 0) {
             // Assigning: Check idle
@@ -79,6 +99,32 @@ export const useAbodeStore = defineStore('abode', () => {
         abode.value.servants.total += count;
         playerStore.save();
         return { success: true, msg: `招募了 ${count} 名仙仆` };
+    }
+
+    function upgradeSpiritGarden(): { success: boolean, msg: string } {
+        // Prerequisite: Abode Lv.2
+        if ((abode.value.level || 1) < 2) {
+            return { success: false, msg: '需将洞府升至 Lv.2 方可开辟灵田' };
+        }
+
+        const cost = spiritGardenCost.value;
+        const res = resources.value;
+
+        if (res.wood < cost.wood || res.iron < cost.iron) {
+            return { success: false, msg: '资源不足' };
+        }
+
+        res.wood -= cost.wood;
+        res.iron -= cost.iron;
+
+        abode.value.spiritGardenLevel = (abode.value.spiritGardenLevel || 0) + 1;
+        playerStore.save();
+
+        const isUnlock = abode.value.spiritGardenLevel === 1;
+        return {
+            success: true,
+            msg: isUnlock ? '成功开辟灵田！现在可以种植灵草了。' : `灵田升级至 Lv.${abode.value.spiritGardenLevel}`
+        };
     }
 
     function upgradeGatheringArray(): { success: boolean, msg: string } {
@@ -117,6 +163,10 @@ export const useAbodeStore = defineStore('abode', () => {
         }
         if (res.maxIron < cost.iron) {
             res.maxIron = Math.floor(cost.iron * 1.5);
+            changed = true;
+        }
+        if (res.maxHerb === undefined || res.maxHerb < 100) {
+            res.maxHerb = 100; // Init
             changed = true;
         }
 
@@ -162,33 +212,26 @@ export const useAbodeStore = defineStore('abode', () => {
         const res = resources.value;
         const prod = productionRates.value;
         const cons = consumptionRates.value;
-        const netFood = prod.food - cons.food;
-
-        // Debug Log (Temporary):
-        // console.log(`[AbodeTick] FoodWork:${abode.value.servants.food} Total:${abode.value.servants.total} Prod:${prod.food} Cons:${cons.food} Net:${netFood}`);
+        // const netFood = prod.food - cons.food;
 
         // Logic Change: Calculate survival based on Start + Production >= Consumption
-        // This allows consuming 'fresh' food before checking storage, avoiding the "Cap -> Consume -> Drop" loop.
-
         const availableFood = res.food + prod.food;
 
         if (availableFood >= cons.food) {
             // Can afford to eat
-
-            // Apply Net Change directly serves to avoid the cap clipping issue
-            // If Net is positive: Add to storage, clamp to max.
-            // If Net is negative: Subtract from storage. 
-
-            // However, we must be careful:
-            // If we use `res.food += netFood`, and net is positive, we simply clamp.
-            // If net is negative, we also simply add (subtract).
-            // But we already verified we don't go below zero (logic-wise availableFood >= cons means res.food + net >= 0)
-
+            const netFood = prod.food - cons.food;
             res.food = Math.min(res.maxFood, res.food + netFood);
 
             // Produce other resources
             res.wood = Math.min(res.maxWood, res.wood + prod.wood);
             res.iron = Math.min(res.maxIron, res.iron + prod.iron);
+
+            // Produce Herbs (Only if Garden Unlocked)
+            if (abode.value.spiritGardenLevel && abode.value.spiritGardenLevel > 0) {
+                // Ensure maxHerb is initialized
+                if (res.maxHerb === undefined) res.maxHerb = 100;
+                res.herb = Math.min(res.maxHerb, (res.herb || 0) + prod.herb);
+            }
 
         } else {
             // Starvation!
@@ -206,11 +249,13 @@ export const useAbodeStore = defineStore('abode', () => {
         consumptionRates,
         netFoodProduction,
         upgradeCost,
+        abodeUpgradeCost,
+        spiritGardenCost,
         assignServant,
         recruitServant,
         upgradeGatheringArray,
-        tickResources,
-        abodeUpgradeCost,
-        upgradeAbode
+        upgradeAbode,
+        upgradeSpiritGarden,
+        tickResources
     };
 });

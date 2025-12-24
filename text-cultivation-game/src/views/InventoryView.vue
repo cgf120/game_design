@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full overflow-y-auto p-4 pb-20 space-y-4">
+  <div class="h-full overflow-y-auto p-4 space-y-4">
     <div class="bg-neutral-800 rounded p-3 text-sm flex justify-between items-center text-neutral-400">
       <span>背包空间</span>
       <span>{{ slots.length }} / 20</span>

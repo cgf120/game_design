@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full overflow-y-auto p-4 pb-20 space-y-4">
+  <div class="h-full overflow-y-auto p-4 space-y-4">
     <!-- Non-Member View: Join Sect -->
     <div v-if="!currentSect" class="flex flex-col gap-4">
       <div 
