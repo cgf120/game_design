@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue';
 import CombatView from '../views/CombatView.vue';
 import InventoryView from '../views/InventoryView.vue';
 import SectView from '../views/SectView.vue';
+import AbodeView from '../views/AbodeView.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -26,6 +27,11 @@ const router = createRouter({
             path: '/sect',
             name: 'sect',
             component: SectView
+        },
+        {
+            path: '/abode',
+            name: 'abode',
+            component: AbodeView
         },
     ],
 });

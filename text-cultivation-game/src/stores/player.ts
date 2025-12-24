@@ -49,12 +49,46 @@ export const usePlayerStore = defineStore('player', () => {
         sect: undefined,
         spiritStones: 0,
         immortalStones: 0,
+
+        // Abode Defaults
+        resources: {
+            food: 100,
+            wood: 0,
+            iron: 0,
+            herb: 0,
+            maxFood: 1000,
+            maxWood: 500,
+            maxIron: 200,
+            maxHerb: 100
+        },
+        abode: {
+            level: 1,
+            servants: {
+                total: 10,
+                food: 0,
+                wood: 0,
+                iron: 0,
+                herb: 0,
+                max: 10
+            },
+            gatheringArrayLevel: 1,
+            spiritGardenLevel: 0 // Locked (0)
+        },
+
         createTime: Date.now(),
         lastLoginTime: Date.now(),
     };
 
     // Merge saved data
-    const player = ref<Player>(savedPlayer ? { ...defaultState, ...savedPlayer, equipment: savedPlayer.equipment || defaultState.equipment, spiritRoot: savedPlayer.spiritRoot || defaultState.spiritRoot, sect: savedPlayer.sect } : defaultState);
+    const player = ref<Player>(savedPlayer ? {
+        ...defaultState,
+        ...savedPlayer,
+        equipment: savedPlayer.equipment || defaultState.equipment,
+        spiritRoot: savedPlayer.spiritRoot || defaultState.spiritRoot,
+        sect: savedPlayer.sect,
+        resources: savedPlayer.resources || defaultState.resources,
+        abode: savedPlayer.abode || defaultState.abode
+    } : defaultState);
 
     // --- Getters ---
     const currentRealm = computed(() => getRealm(player.value.cultivation.realmId));
@@ -108,6 +142,19 @@ export const usePlayerStore = defineStore('player', () => {
             critRate: player.value.stats.critRate, // These could also be dynamic later
             dodgeRate: player.value.stats.dodgeRate
         };
+    });
+
+    // Cultivation Rate (Base + Bonuses)
+    const cultivationRate = computed(() => {
+        let rate = 5; // Base Rate
+
+        // 1. Gathering Array Bonus (Flat +1 per level)
+        if (player.value.abode) {
+            const level = player.value.abode.gatheringArrayLevel || 1;
+            rate += level * 1;
+        }
+
+        return Math.floor(rate);
     });
 
     // Watch for effective stats changes (e.g. Realm upgrade, Equipment change)
@@ -203,28 +250,26 @@ export const usePlayerStore = defineStore('player', () => {
         save();
     }
 
+    // Regen Bonus (0.5% per Gathering Array Level)
+    const regenBonus = computed(() => {
+        if (!player.value.abode) return 0;
+        return (player.value.abode.gatheringArrayLevel || 0) * 0.005;
+    });
+
     function regenStats() {
         if (!player.value) return;
         const stats = player.value.stats;
 
-        // Regen 1% every tick (assumed tick is 5s or 1s? Let's assume 1s for now but slow rate)
-        // If GameLoop ticks every 1s, 1% might be too fast?
-        // Let's do 0.5% per second or 1% every 2 seconds.
-        // Actually, user context implies "it doesn't change automatically", so let's make it visible.
-        // 1% per second is fine for a fast paced cultivation game.
-
-        const hpRate = 0.01;
-        const mpRate = 0.01;
+        // Base 1% + Bonus
+        const hpRate = 0.01 + regenBonus.value;
+        const mpRate = 0.01 + regenBonus.value;
 
         if (stats.hp < stats.maxHp) {
-            stats.hp = Math.min(stats.maxHp, stats.hp + Math.max(1, stats.maxHp * hpRate));
+            stats.hp = Math.min(stats.maxHp, stats.hp + Math.max(1, Math.floor(stats.maxHp * hpRate)));
         }
         if (stats.mp < stats.maxMp) {
-            stats.mp = Math.min(stats.maxMp, stats.mp + Math.max(1, stats.maxMp * mpRate));
+            stats.mp = Math.min(stats.maxMp, stats.mp + Math.max(1, Math.floor(stats.maxMp * mpRate)));
         }
-
-        // Debug Log
-        // console.log(`[Regen] HP: ${stats.hp}/${stats.maxHp}, MP: ${stats.mp}/${stats.maxMp}`);
     }
 
     // --- Auto Save (Reactive) ---
@@ -239,8 +284,6 @@ export const usePlayerStore = defineStore('player', () => {
     }
 
     // Subscribe to mutations
-    // FIX: Don't call usePlayerStore() inside the definition!
-    // Use watch on the state directly.
     watch(player, () => {
         scheduleSave();
     }, { deep: true });
@@ -258,6 +301,8 @@ export const usePlayerStore = defineStore('player', () => {
         reset,
         equipItem,
         unequipItem,
-        regenStats
+        regenStats,
+        cultivationRate,
+        regenBonus
     };
 });

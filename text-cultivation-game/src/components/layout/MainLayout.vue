@@ -27,6 +27,9 @@
       <router-link to="/inventory" class="nav-item">
         <span>行囊</span>
       </router-link>
+      <router-link to="/abode" class="nav-item">
+        <span>洞府</span>
+      </router-link>
       <router-link to="/sect" class="nav-item">
         <span>宗门</span>
       </router-link>

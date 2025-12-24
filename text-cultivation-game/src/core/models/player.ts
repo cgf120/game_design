@@ -28,6 +28,32 @@ export interface SpiritRoot {
     earth: number; // 土
 }
 
+export interface PlayerResources {
+    food: number;
+    wood: number;
+    iron: number;
+    herb: number; // New: Spirit Herbs
+    maxFood: number;
+    maxWood: number;
+    maxIron: number;
+    maxHerb: number;
+}
+
+export interface PlayerAbode {
+    level: number; // Cave Level
+    servants: {
+        total: number;
+        // Assignments:
+        food: number;
+        wood: number;
+        iron: number;
+        herb: number; // New servant role
+        max: number;
+    };
+    gatheringArrayLevel: number;
+    spiritGardenLevel: number; // New facility
+}
+
 export interface CultivationState {
     realmId: number; // Current Realm ID (matches constants/realms.ts)
     currentExp: number; // Current Cultivation (Xiuwei)
@@ -51,6 +77,10 @@ export interface Player {
     // Resources
     spiritStones: number; // 灵石
     immortalStones: number; // 仙石
+
+    // Abode & Production
+    resources: PlayerResources;
+    abode: PlayerAbode;
 
     // Meta
     createTime: number;
