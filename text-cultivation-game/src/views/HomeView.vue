@@ -2,68 +2,78 @@
   <div class="h-full flex flex-col p-2 gap-2 overflow-hidden bg-black text-xs font-serif leading-relaxed select-none">
     
     <!-- TOP STATUS AREA (Denser) -->
-    <div class="flex-none p-2 border border-neutral-800 bg-neutral-900/80 relative">
-        <div class="absolute top-0 left-0 text-neutral-700 leading-none select-none">╔</div>
-        <div class="absolute top-0 right-0 text-neutral-700 leading-none select-none">╗</div>
-        <div class="absolute bottom-0 left-0 text-neutral-700 leading-none select-none">╚</div>
-        <div class="absolute bottom-0 right-0 text-neutral-700 leading-none select-none">╝</div>
-
-        <div class="flex items-center justify-between z-10 relative">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 border border-amber-900 bg-black flex items-center justify-center text-xl text-amber-600 font-bold shadow-[0_0_10px_rgba(180,83,9,0.3)]">
-                    道
-                </div>
-                <div>
-                     <div class="text-glow-gold text-amber-500 font-bold text-sm tracking-widest">{{ currentRealmName }} <span class="text-[10px] text-neutral-500 font-mono">{{ (progressPercentage).toFixed(1) }}%</span></div>
-                     <div class="text-neutral-500 scale-90 origin-left">道历 {{ gameDay }} 年 · 寿元 {{ Math.floor(stats.hp) }}</div>
-                </div>
+    <!-- TOP STATUS AREA (Denser) -->
+    <InkPanel class="flex-none flex items-center justify-between z-10 p-2 bg-neutral-900/80" :decorated="true">
+        <div class="flex items-center gap-3">
+            <div class="relative w-10 h-10 flex items-center justify-center">
+                 <XianxiaIcon src="ui_stat_realm" fallback="道" size="lg" :glow="true" />
             </div>
-            <div class="text-right">
-                <div class="text-jade text-glow-jade tracking-wide">灵石 {{ spiritStones }}</div>
-                <div class="text-neutral-500 scale-90 origin-right">声望 0</div>
+            <div>
+                 <div class="text-glow-gold text-amber-500 font-bold text-sm tracking-widest">{{ currentRealmName }} <span class="text-[10px] text-neutral-500 font-mono">{{ (progressPercentage).toFixed(1) }}%</span></div>
+                 <div class="text-neutral-500 scale-90 origin-left">道历 {{ gameDay }} 年 · 寿元 {{ Math.floor(stats.hp) }}</div>
             </div>
         </div>
-    </div>
+        <div class="text-right">
+            <div class="flex items-center justify-end gap-1 text-jade text-glow-jade tracking-wide">
+                <XianxiaIcon src="ui_stat_spiritstone" fallback="💎" size="xs" />
+                {{ spiritStones }}
+            </div>
+            <div class="text-neutral-500 scale-90 origin-right">声望 0</div>
+        </div>
+    </InkPanel>
 
     <!-- MAIN MEDITATION AREA (Visual Center) -->
-    <div class="flex-none h-48 relative border-x border-neutral-900 bg-gradient-to-b from-black via-neutral-900/20 to-black flex flex-col items-center justify-center gap-4">
-        <!-- Decor -->
-        <div class="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center text-[100px] text-neutral-800 font-cursive">修</div>
+    <!-- MAIN MEDITATION AREA (Visual Center) -->
+    <div class="flex-none h-48 relative border-x border-neutral-900 bg-gradient-to-b from-black via-neutral-900/20 to-black flex flex-col items-center justify-center gap-4 overflow-hidden">
+        <!-- Background Mandala (Rotating) -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+            <XianxiaIcon src="ui_bg_mandala" fallback="" size="2xl" class="animate-spin-slow w-64 h-64 opacity-30" />
+        </div>
+        
+        <!-- Decor Text -->
+        <div class="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center text-[100px] text-neutral-800 font-cursive z-0">修</div>
         
         <!-- Orb -->
         <div 
             @click="manualCultivate"
-            class="w-24 h-24 rounded-full border border-neutral-800 relative flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,1)] bg-black overflow-hidden cursor-pointer active:scale-95 transition-transform"
+            class="relative z-10 cursor-pointer active:scale-95 transition-transform group"
         >
-            <div class="absolute inset-0 rounded-full border border-amber-900/30 animate-pulse z-20"></div>
-            <div 
-                class="absolute bottom-0 w-full bg-amber-600/20 transition-all duration-300 ease-linear z-10" 
-                :style="{ height: `${Math.min(progressPercentage, 100)}%` }"
-            ></div>
-            <div class="z-30 text-3xl animate-pulse text-neutral-700 select-none">🧘</div>
+            <XianxiaIcon 
+                src="ui_orb_meditate" 
+                fallback="🧘" 
+                size="2xl" 
+                :glow="true"
+                class="filter drop-shadow-[0_0_15px_rgba(217,119,6,0.3)]"
+            />
+            <!-- Simple Overlay Progress (if no intricate image animation) -->
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-1 bg-neutral-800 rounded-full overflow-hidden mt-2 opacity-50">
+                 <div class="h-full bg-amber-600" :style="{ width: `${Math.min(progressPercentage, 100)}%` }"></div>
+            </div>
         </div>
 
         <!-- Actions -->
         <div class="w-full px-8 flex justify-between gap-4 z-10">
-            <button 
-                @click="manualCultivate"
-                class="flex-1 py-1 border border-neutral-800 hover:border-neutral-600 bg-black text-neutral-400 hover:text-white transition-colors text-center group"
-            >
-                <span class="group-hover:text-glow-gold">[ 吐纳 ]</span>
-            </button>
-            <button 
+            <SpiritButton @click="manualCultivate" class="flex-1" variant="secondary">
+                [ 吐纳 ]
+            </SpiritButton>
+            
+            <SpiritButton 
                 v-if="canBreakthrough"
                 @click="openBreakthroughDialog"
-                class="flex-1 py-1 border border-amber-900 hover:border-amber-600 bg-amber-900/10 text-amber-500 text-center animate-pulse"
+                class="flex-1 animate-pulse relative overflow-hidden" 
+                variant="primary"
             >
-                [ 突破 ]
-            </button>
-             <button 
+                <div class="absolute inset-0 opacity-40 bg-[url('@/assets/ui/ui_btn_breakthrough.png')] bg-cover bg-center mix-blend-overlay"></div>
+                <span class="relative z-10">[ 突破 ]</span>
+            </SpiritButton>
+             <SpiritButton 
                 v-else
-                class="flex-1 py-1 border border-transparent text-neutral-700 text-center cursor-default"
+                class="flex-1"
+                variant="ghost"
+                :disabled="true"
             >
-                <span class="opacity-50">...</span>
-            </button>
+                ...
+            </SpiritButton>
         </div>
     </div>
 
@@ -91,20 +101,40 @@
             <!-- STATS TAB -->
             <div v-if="activeTab === '属性'">
                 <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <div class="flex justify-between border-b border-dashed border-neutral-800 pb-1">
-                        <span class="text-neutral-500">攻击</span><span class="text-amber-600">{{ stats.atk }}</span>
+                    <div class="flex items-center justify-between border-b border-dashed border-neutral-800 pb-1">
+                        <div class="flex items-center gap-1 text-neutral-500">
+                            <XianxiaIcon src="ui_stat_atk" fallback="🗡️" size="xs" />
+                            <span>攻击</span>
+                        </div>
+                        <span class="text-amber-600 font-mono">{{ stats.atk }}</span>
                     </div>
-                    <div class="flex justify-between border-b border-dashed border-neutral-800 pb-1">
-                        <span class="text-neutral-500">防御</span><span class="text-blue-600">{{ stats.def }}</span>
+                    <div class="flex items-center justify-between border-b border-dashed border-neutral-800 pb-1">
+                        <div class="flex items-center gap-1 text-neutral-500">
+                            <XianxiaIcon src="ui_stat_def" fallback="🛡️" size="xs" />
+                            <span>防御</span>
+                        </div>
+                        <span class="text-blue-600 font-mono">{{ stats.def }}</span>
                     </div>
-                    <div class="flex justify-between border-b border-dashed border-neutral-800 pb-1">
-                        <span class="text-neutral-500">气血</span><span class="text-neutral-300">{{ Math.floor(stats.hp) }}/{{ stats.maxHp }}</span>
+                    <div class="flex items-center justify-between border-b border-dashed border-neutral-800 pb-1">
+                        <div class="flex items-center gap-1 text-neutral-500">
+                            <XianxiaIcon src="ui_stat_hp" fallback="❤️" size="xs" />
+                            <span>气血</span>
+                        </div>
+                        <span class="text-neutral-300 font-mono">{{ Math.floor(stats.hp) }}/{{ stats.maxHp }}</span>
                     </div>
-                    <div class="flex justify-between border-b border-dashed border-neutral-800 pb-1">
-                        <span class="text-neutral-500">灵力</span><span class="text-sky-600">{{ Math.floor(stats.mp) }}/{{ stats.maxMp }}</span>
+                    <div class="flex items-center justify-between border-b border-dashed border-neutral-800 pb-1">
+                        <div class="flex items-center gap-1 text-neutral-500">
+                            <XianxiaIcon src="ui_stat_mp" fallback="💧" size="xs" />
+                            <span>灵力</span>
+                        </div>
+                        <span class="text-sky-600 font-mono">{{ Math.floor(stats.mp) }}/{{ stats.maxMp }}</span>
                     </div>
-                    <div class="flex justify-between border-b border-dashed border-neutral-800 pb-1">
-                        <span class="text-neutral-500">暴击</span><span class="text-neutral-400">{{ (stats.critRate * 100).toFixed(1) }}%</span>
+                    <div class="flex items-center justify-between border-b border-dashed border-neutral-800 pb-1">
+                        <div class="flex items-center gap-1 text-neutral-500">
+                            <span class="text-lg leading-none">⚡</span>
+                            <span>暴击</span>
+                        </div>
+                        <span class="text-neutral-400 font-mono">{{ (stats.critRate * 100).toFixed(1) }}%</span>
                     </div>
                 </div>
 
@@ -206,59 +236,76 @@
     </div>
     
     <!-- BREAKTHROUGH MODAL -->
-    <div v-if="showBreakthroughModal" class="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-sm border border-amber-900 bg-neutral-900 p-4 space-y-4 shadow-[0_0_20px_rgba(180,83,9,0.2)]">
-            <div class="text-center border-b border-amber-900/30 pb-2">
-                <div class="text-lg text-amber-500 font-bold">准备突破</div>
-                <div class="text-xs text-neutral-500">境界：{{ playerStore.nextRealm?.name || '未知' }}</div>
+    <div v-if="showBreakthroughModal" class="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
+        <InkPanel class="w-full max-w-sm" :decorated="true">
+            <!-- Header Image -->
+            <div class="h-24 -mt-4 -mx-4 mb-4 relative overflow-hidden border-b border-amber-900/50">
+                <div 
+                    class="absolute inset-0 bg-cover bg-center opacity-80 mix-blend-screen"
+                    :style="{ backgroundImage: `url(${breakthroughBgUrl})` }"
+                ></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-neutral-900 to-transparent"></div>
+                
+                <div class="absolute bottom-2 left-0 w-full text-center">
+                    <div class="text-xl text-amber-500 font-bold text-shadow-gold tracking-widest">准备突破</div>
+                    <div class="text-xs text-amber-200/70 font-mono">目标境界：{{ playerStore.nextRealm?.name || '未知' }}</div>
+                </div>
             </div>
 
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
+            <div class="space-y-4 text-sm px-2 pb-2">
+                <!-- Probabilities -->
+                <div class="flex justify-between items-center bg-black/30 p-2 rounded border border-neutral-800">
                     <span class="text-neutral-400">基础成功率</span>
-                    <span class="text-neutral-200">{{ Math.floor(breakthroughBaseProb * 100) }}%</span>
+                    <span class="text-amber-100 font-mono">{{ Math.floor(breakthroughBaseProb * 100) }}%</span>
                 </div>
                 
-                <div v-if="breakthroughTargetItem" class="space-y-1 pt-2 border-t border-dashed border-neutral-800">
-                    <div class="flex justify-between items-center">
-                        <span class="text-amber-700">{{ breakthroughTargetItem.name }} (拥有: {{ breakthroughMaxCount }})</span>
-                        <span class="text-xs text-green-600">+{{ Math.floor(breakthroughItemBonus * 100) }}%/个</span>
+                <!-- Item Usage -->
+                <div v-if="breakthroughTargetItem" class="space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-amber-600 flex items-center gap-1">
+                            <XianxiaIcon src="ui_stat_spiritstone" fallback="💊" size="xs" />
+                            {{ breakthroughTargetItem.name }} ({{ breakthroughMaxCount }})
+                        </span>
+                        <span class="text-green-600">+{{ Math.floor(breakthroughItemBonus * 100) }}%/个</span>
                     </div>
                     
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-3">
                          <input 
                             type="range" 
                             v-model.number="breakthroughItemCount" 
                             :max="breakthroughMaxCount" 
                             min="0"
-                            class="flex-1 accent-amber-600 h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer"
+                            class="flex-1 accent-amber-600 h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer border border-neutral-700"
                         >
-                        <span class="w-8 text-right text-amber-500">{{ breakthroughItemCount }}</span>
+                        <span class="w-8 text-right text-amber-500 font-mono text-lg">{{ breakthroughItemCount }}</span>
                     </div>
-                    <div class="text-[10px] text-neutral-500">消耗物品提升成功几率</div>
                 </div>
                 
-                <div v-else class="py-2 text-center text-neutral-600 text-xs italic">
+                <div v-else class="py-4 text-center text-neutral-600 text-xs italic border border-dashed border-neutral-800 rounded">
                     无可用辅助丹药
                 </div>
 
-                <div class="flex justify-between border-t border-amber-900/30 pt-2 font-bold">
-                    <span class="text-neutral-300">最终成功率</span>
-                    <span :class="breakthroughTotalProb >= 0.8 ? 'text-green-500' : (breakthroughTotalProb >= 0.5 ? 'text-amber-500' : 'text-red-500')">
+                <!-- Total Probability -->
+                <div class="flex justify-between items-center border-t border-amber-900/30 pt-3">
+                    <span class="text-neutral-300 font-bold">最终成功率</span>
+                    <div class="text-xl font-bold font-mono"
+                        :class="breakthroughTotalProb >= 0.8 ? 'text-green-500 text-shadow-green' : (breakthroughTotalProb >= 0.5 ? 'text-amber-500' : 'text-red-500')"
+                    >
                         {{ Math.floor(breakthroughTotalProb * 100) }}%
-                    </span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3 pt-2">
+                    <SpiritButton @click="showBreakthroughModal = false" class="flex-1" variant="secondary">
+                        放弃
+                    </SpiritButton>
+                    <SpiritButton @click="confirmBreakthrough" class="flex-1" variant="primary">
+                        开始突破
+                    </SpiritButton>
                 </div>
             </div>
-
-            <div class="flex gap-2 text-sm pt-2">
-                <button @click="showBreakthroughModal = false" class="flex-1 py-1 border border-neutral-700 text-neutral-400 hover:text-neutral-200">
-                    取消
-                </button>
-                <button @click="confirmBreakthrough" class="flex-1 py-1 bg-amber-900/20 border border-amber-600 text-amber-500 hover:bg-amber-900/40">
-                    开始突破
-                </button>
-            </div>
-        </div>
+        </InkPanel>
     </div>
 
   </div>
@@ -270,6 +317,9 @@ import { usePlayerStore } from '../stores/player';
 import { useSkillStore } from '../stores/skill';
 import { getItem } from '../core/constants/items';
 import { useModal } from '../composables/useModal';
+import XianxiaIcon from '../components/shared/XianxiaIcon.vue';
+import InkPanel from '../components/shared/InkPanel.vue';
+import SpiritButton from '../components/shared/SpiritButton.vue';
 
 const playerStore = usePlayerStore();
 const skillStore = useSkillStore();
@@ -277,6 +327,9 @@ const { showModal } = useModal();
 
 const recentLogs = ref<string[]>(['[系统] 欢迎来到修真世界...']);
 const activeTab = ref('属性');
+
+import breakthroughBg from '@/assets/ui/ui_btn_breakthrough.png';
+const breakthroughBgUrl = breakthroughBg;
 
 // Breakthrough Dialog State
 const showBreakthroughModal = ref(false);

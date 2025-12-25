@@ -1,10 +1,17 @@
 <template>
   <div class="h-screen overflow-hidden bg-ink text-primary font-serif flex flex-col">
     <!-- Top Status Bar (Hidden on Home) -->
+    <!-- Top Status Bar (Hidden on Home) -->
     <header v-if="route.path !== '/'" class="border-b border-ink p-2 text-xs flex justify-between items-center sticky top-0 z-10 bg-ink-base backdrop-blur-sm">
       <div class="flex gap-4">
-        <span class="text-gold font-bold">境界: {{ currentRealmName }}</span>
-        <span class="text-jade">灵石: {{ spiritStones }}</span>
+        <div class="flex items-center gap-1 text-gold font-bold">
+            <XianxiaIcon src="ui_stat_realm" fallback="道" size="xs" :glow="true" />
+            <span>{{ currentRealmName }}</span>
+        </div>
+        <div class="flex items-center gap-1 text-jade">
+            <XianxiaIcon src="ui_stat_spiritstone" fallback="💎" size="xs" />
+            <span>{{ spiritStones }}</span>
+        </div>
       </div>
       <div>
         <span class="text-secondary">道历 {{ gameDay }} 年</span>
@@ -17,26 +24,26 @@
     </main>
 
     <!-- Bottom Navigation (Static flow) -->
-    <nav class="border-t border-ink w-full flex justify-around p-2 z-10 shrink-0 bg-ink-base">
-      <router-link to="/" class="nav-item">
-        <span class="text-lg">🧘</span>
-        <span class="text-xs mt-1">修炼</span>
+    <nav class="border-t border-ink w-full flex justify-around p-2 z-10 shrink-0 bg-ink-base pb-safe">
+      <router-link to="/" class="nav-item group">
+        <XianxiaIcon src="ui_nav_cultivate" fallback="🧘" size="md" :glow="route.path === '/'" />
+        <span class="text-[10px] mt-1 group-hover:text-gold transition-colors">修炼</span>
       </router-link>
-      <router-link to="/combat" class="nav-item">
-        <span class="text-lg">⚔️</span>
-        <span class="text-xs mt-1">历练</span>
+      <router-link to="/combat" class="nav-item group">
+        <XianxiaIcon src="ui_nav_combat" fallback="⚔️" size="md" :glow="route.path === '/combat'" />
+        <span class="text-[10px] mt-1 group-hover:text-gold transition-colors">历练</span>
       </router-link>
-      <router-link to="/inventory" class="nav-item">
-        <span class="text-lg">🎒</span>
-        <span class="text-xs mt-1">行囊</span>
+      <router-link to="/inventory" class="nav-item group">
+        <XianxiaIcon src="ui_nav_inventory" fallback="🎒" size="md" :glow="route.path === '/inventory'" />
+        <span class="text-[10px] mt-1 group-hover:text-gold transition-colors">行囊</span>
       </router-link>
-      <router-link to="/abode" class="nav-item">
-        <span class="text-lg">🏯</span>
-        <span class="text-xs mt-1">洞府</span>
+      <router-link to="/abode" class="nav-item group">
+        <XianxiaIcon src="ui_nav_abode" fallback="🏯" size="md" :glow="route.path === '/abode'" />
+        <span class="text-[10px] mt-1 group-hover:text-gold transition-colors">洞府</span>
       </router-link>
-      <router-link to="/sect" class="nav-item">
-        <span class="text-lg">⛩️</span>
-        <span class="text-xs mt-1">宗门</span>
+      <router-link to="/sect" class="nav-item group">
+        <XianxiaIcon src="ui_nav_sect" fallback="⛩️" size="md" :glow="route.path === '/sect'" />
+        <span class="text-[10px] mt-1 group-hover:text-gold transition-colors">宗门</span>
       </router-link>
     </nav>
   </div>
@@ -46,6 +53,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePlayerStore } from '../../stores/player';
+import XianxiaIcon from '../shared/XianxiaIcon.vue';
 
 const route = useRoute();
 const playerStore = usePlayerStore();
@@ -58,7 +66,7 @@ const gameDay = computed(() => Math.floor((Date.now() - playerStore.player.creat
 
 <style scoped>
 .nav-item {
-  @apply flex flex-col items-center justify-center p-2 rounded transition-colors text-secondary;
+  @apply flex flex-col items-center justify-center p-1 rounded transition-colors text-secondary flex-1;
 }
 
 .nav-item:hover {
