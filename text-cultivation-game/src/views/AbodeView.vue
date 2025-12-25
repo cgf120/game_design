@@ -31,7 +31,7 @@
     <div class="flex-1 flex flex-col min-h-0 border border-neutral-800 bg-neutral-900/30 relative">
         <div class="flex justify-center gap-8 py-2 text-sm border-b border-neutral-800/50 bg-black">
             <button 
-                v-for="tab in ['经营', '建设']" 
+                v-for="tab in ['经营', '建设', '炼器']" 
                 :key="tab"
                 @click="activeTab = tab"
                 class="relative px-2 transition-colors"
@@ -175,6 +175,71 @@
                 </div>
             </div>
 
+            <!-- Crafting Tab -->
+            <div v-if="activeTab === '炼器'" class="space-y-3">
+                 <div v-if="availableRecipes.length === 0" class="text-center text-neutral-500 py-4">
+                    <div class="text-xs">暂无配方</div>
+                    <div class="text-[10px] opacity-60 mt-1">升级洞府可解锁更多</div>
+                 </div>
+
+                 <div v-for="recipe in availableRecipes" :key="recipe.id" class="bg-black p-2 border border-neutral-800 relative group">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1 mr-2">
+                             <div class="flex items-center gap-2">
+                                <div class="text-sm font-bold text-neutral-300 group-hover:text-glow-silver transition-all">{{ recipe.name }}</div>
+                                <!-- Badge for type -->
+                                <span v-if="getRecipeItem(recipe.outputId)?.type === 'equipment'" class="px-1 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-[8px] text-neutral-500">
+                                    装备
+                                </span>
+                             </div>
+                             <div class="text-[10px] text-neutral-500 mt-0.5 mb-1">{{ recipe.description }}</div>
+                             
+                             <!-- Stats Preview -->
+                             <div v-if="getRecipeItem(recipe.outputId)?.statsRange" class="grid grid-cols-2 gap-x-4 gap-y-0.5 text-[10px] text-neutral-400 font-mono bg-neutral-900/50 p-1.5 rounded border border-neutral-800/50">
+                                <div v-for="(range, stat) in getRecipeItem(recipe.outputId)?.statsRange" :key="stat">
+                                    <span class="text-neutral-500">{{ STAT_NAMES[stat as keyof typeof STAT_NAMES] || stat }}: </span>
+                                    <span class="text-amber-700/80">{{ range && range[0] }}-{{ range && range[1] }}</span>
+                                </div>
+                             </div>
+                        </div>
+                        <button 
+                            @click="handleCraft(recipe.id)"
+                            class="px-3 py-1 border text-xs transition-colors shrink-0"
+                            :class="craftingStore.canCraft(recipe) 
+                                ? 'border-amber-700 text-amber-500 hover:bg-amber-900/30 cursor-pointer' 
+                                : 'border-neutral-800 text-neutral-600 cursor-not-allowed'"
+                            :disabled="!craftingStore.canCraft(recipe)"
+                        >
+                            打造
+                        </button>
+                    </div>
+
+                    <!-- Cost Display -->
+                    <div class="grid grid-cols-4 gap-2 text-[10px] font-mono border-t border-dashed border-neutral-900 pt-2">
+                         <div v-if="recipe.cost.spiritStones">
+                            <span :class="playerStore.player.spiritStones >= recipe.cost.spiritStones ? 'text-neutral-400' : 'text-red-500'">
+                                灵石 {{ recipe.cost.spiritStones }}
+                            </span>
+                        </div>
+                        <div v-if="recipe.cost.wood">
+                            <span :class="resources.wood >= recipe.cost.wood ? 'text-green-600' : 'text-red-500'">
+                                木 {{ recipe.cost.wood }}
+                            </span>
+                        </div>
+                        <div v-if="recipe.cost.iron">
+                            <span :class="resources.iron >= recipe.cost.iron ? 'text-neutral-400' : 'text-red-500'">
+                                铁 {{ recipe.cost.iron }}
+                            </span>
+                        </div>
+                         <div v-if="recipe.cost.herb">
+                            <span :class="(resources.herb||0) >= recipe.cost.herb ? 'text-emerald-500' : 'text-red-500'">
+                                草 {{ recipe.cost.herb }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
   </div>
@@ -182,15 +247,36 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { getItem } from '../core/constants/items';
 import { useAbodeStore } from '../stores/abode';
+import { useCraftingStore } from '../stores/crafting';
+import { usePlayerStore } from '../stores/player';
 import { useModal } from '../composables/useModal';
 
 const abodeStore = useAbodeStore();
+const craftingStore = useCraftingStore();
+const playerStore = usePlayerStore();
 const { showModal } = useModal();
 const activeTab = ref('经营'); // Default tab
 
 // Reactivity
 const resources = computed(() => abodeStore.resources);
+// ... existing computed ...
+
+// Helper to get item details for recipe
+function getRecipeItem(outputId: string) {
+    return getItem(outputId);
+}
+
+const STAT_NAMES = {
+    atk: '攻击',
+    def: '防御',
+    hp: '气血',
+    mp: '灵力',
+    critRate: '暴击',
+    dodgeRate: '闪避'
+};
+
 const abode = computed(() => abodeStore.abode);
 const idleServants = computed(() => abodeStore.idleServants);
 const productionRates = computed(() => abodeStore.productionRates);
@@ -198,6 +284,7 @@ const netFoodProduction = computed(() => abodeStore.netFoodProduction);
 const upgradeCost = computed(() => abodeStore.upgradeCost);
 const abodeUpgradeCost = computed(() => abodeStore.abodeUpgradeCost);
 const spiritGardenCost = computed(() => abodeStore.spiritGardenCost || { wood: 0, iron: 0 });
+const availableRecipes = computed(() => craftingStore.availableRecipes);
 
 // Actions
 function handleAssign(job: 'food' | 'wood' | 'iron' | 'herb', amount: number) {
@@ -237,6 +324,11 @@ function handleUpgradeAbode() {
 function handleUpgradeSpiritGarden() {
     const res = abodeStore.upgradeSpiritGarden();
     showModal({ title: res.success ? '操作成功' : '操作失败', content: res.msg });
+}
+
+function handleCraft(recipeId: string) {
+    const res = craftingStore.craftItem(recipeId);
+    showModal({ title: res.success ? '消息' : '失败', content: res.msg });
 }
 </script>
 ```

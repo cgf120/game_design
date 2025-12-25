@@ -29,6 +29,33 @@ export const useInventoryStore = defineStore('inventory', () => {
         const item = getItem(itemId);
         if (!item) return false;
 
+        // Check if unique item (Equipment with ranges)
+        if (item.type === 'equipment' && item.statsRange && !item.stackable) {
+            const stats: any = {};
+            // Helper to roll random float/int
+            const roll = (min: number, max: number, isRate: boolean) => {
+                const val = Math.random() * (max - min) + min;
+                return isRate ? parseFloat(val.toFixed(4)) : Math.floor(val);
+            };
+
+            if (item.statsRange.atk) stats.atk = roll(item.statsRange.atk[0], item.statsRange.atk[1], false);
+            if (item.statsRange.def) stats.def = roll(item.statsRange.def[0], item.statsRange.def[1], false);
+            if (item.statsRange.hp) stats.hp = roll(item.statsRange.hp[0], item.statsRange.hp[1], false);
+            if (item.statsRange.mp) stats.mp = roll(item.statsRange.mp[0], item.statsRange.mp[1], false);
+            if (item.statsRange.critRate) stats.critRate = roll(item.statsRange.critRate[0], item.statsRange.critRate[1], true);
+            if (item.statsRange.dodgeRate) stats.dodgeRate = roll(item.statsRange.dodgeRate[0], item.statsRange.dodgeRate[1], true);
+
+            playerStore.player.inventory.push({
+                itemId,
+                count: 1,
+                instanceData: {
+                    stats: stats
+                }
+            });
+            playerStore.save();
+            return true;
+        }
+
         if (item.stackable) {
             const existing = playerStore.player.inventory.find(s => s.itemId === itemId);
             if (existing) {

@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-x-0 bottom-0 top-20 z-50 flex flex-col pointer-events-none">
+  <div class="absolute inset-x-0 bottom-0 top-20 z-50 flex flex-col pointer-events-none">
      <!-- Backdrop (Close on click) -->
      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" @click="$emit('close')"></div>
      

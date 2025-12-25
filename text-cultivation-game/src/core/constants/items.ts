@@ -7,14 +7,38 @@ export const ITEMS: Record<string, Item> = {
 
     // Equipment (Examples)
     // Equipment (Fantasy Westward Journey Style)
-    'weapon_youlong': { id: 'weapon_youlong', name: '游龙剑', type: 'equipment', slot: 'weapon', desc: '古代名剑。剑身柔软，可如腰带般束于腰间。', salePrice: 500, stats: { atk: 15 }, stackable: false },
-    'weapon_pophe': { id: 'weapon_pophe', name: '破魄', type: 'equipment', slot: 'weapon', desc: '剑身由玄铁铸造，隐隐透出一股寒气，摄人心魄。', salePrice: 2000, stats: { atk: 45, critRate: 0.05 }, stackable: false },
+    'weapon_youlong': {
+        id: 'weapon_youlong', name: '游龙剑', type: 'equipment', slot: 'weapon', desc: '古代名剑。剑身柔软，可如腰带般束于腰间。',
+        salePrice: 500, stats: { atk: 15 }, stackable: false,
+        statsRange: { atk: [12, 18] }
+    },
+    'weapon_pophe': {
+        id: 'weapon_pophe', name: '破魄', type: 'equipment', slot: 'weapon', desc: '剑身由玄铁铸造，隐隐透出一股寒气，摄人心魄。',
+        salePrice: 2000, stats: { atk: 45, critRate: 0.05 }, stackable: false,
+        statsRange: { atk: [40, 50], critRate: [0.03, 0.07] }
+    },
 
-    'armor_wucai': { id: 'armor_wucai', name: '五彩裙', type: 'equipment', slot: 'armor', desc: '用五彩丝线织成的裙子，色彩绚丽。', salePrice: 500, stats: { def: 10, hp: 50 }, stackable: false },
-    'armor_skull': { id: 'armor_skull', name: '骷髅战甲', type: 'equipment', slot: 'armor', desc: '魔界流传出的宝甲，以上古魔兽骨骼打造。', salePrice: 2000, stats: { def: 30, hp: 200 }, stackable: false },
+    'armor_wucai': {
+        id: 'armor_wucai', name: '五彩裙', type: 'equipment', slot: 'armor', desc: '用五彩丝线织成的裙子，色彩绚丽。',
+        salePrice: 500, stats: { def: 10, hp: 50 }, stackable: false,
+        statsRange: { def: [8, 12], hp: [40, 60] }
+    },
+    'armor_skull': {
+        id: 'armor_skull', name: '骷髅战甲', type: 'equipment', slot: 'armor', desc: '魔界流传出的宝甲，以上古魔兽骨骼打造。',
+        salePrice: 2000, stats: { def: 30, hp: 200 }, stackable: false,
+        statsRange: { def: [25, 35], hp: [180, 220] }
+    },
 
-    'accessory_moon': { id: 'accessory_moon', name: '月光', type: 'equipment', slot: 'accessory', desc: '吸收了月之精华的项链，佩戴者心静如水。', salePrice: 500, stats: { mp: 50, atk: 5 }, stackable: false },
-    'accessory_rainbow': { id: 'accessory_rainbow', name: '七彩玲珑石', type: 'equipment', slot: 'accessory', desc: '女娲补天遗留下的七彩神石，拥有神秘的力量。', salePrice: 2000, stats: { mp: 150, atk: 15, hp: 100 }, stackable: false },
+    'accessory_moon': {
+        id: 'accessory_moon', name: '月光', type: 'equipment', slot: 'accessory', desc: '吸收了月之精华的项链，佩戴者心静如水。',
+        salePrice: 500, stats: { mp: 50, atk: 5 }, stackable: false,
+        statsRange: { mp: [40, 60], atk: [3, 7] }
+    },
+    'accessory_rainbow': {
+        id: 'accessory_rainbow', name: '七彩玲珑石', type: 'equipment', slot: 'accessory', desc: '女娲补天遗留下的七彩神石，拥有神秘的力量。',
+        salePrice: 2000, stats: { mp: 150, atk: 15, hp: 100 }, stackable: false,
+        statsRange: { mp: [130, 170], atk: [12, 18], hp: [80, 120] }
+    },
 
     // Skill Manuals
     'manual_sweep': { id: 'manual_sweep', name: '《横扫千军》残页', type: 'consumable', desc: '记载着大唐官府的入门绝技。使用后学习【横扫千军】。', salePrice: 100, useEffect: { type: 'learn_skill', value: 'skill_sweep' }, stackable: true, icon: 'icon_skills' },
@@ -35,19 +59,55 @@ export const ITEMS: Record<string, Item> = {
 
     // --- FWJ High Tier Equipment ---
     // Lv 60
-    'weapon_qinggang': { id: 'weapon_qinggang', name: '青刚剑', type: 'equipment', slot: 'weapon', desc: '百炼精钢打造，削铁如泥。', salePrice: 5000, stats: { atk: 180 }, stackable: false, gemSlots: 3 },
-    'armor_night': { id: 'armor_night', name: '夜魔披风', type: 'equipment', slot: 'armor', desc: '来自魔界的披风，隐匿气息。', salePrice: 5000, stats: { def: 55, hp: 300 }, stackable: false, gemSlots: 3 },
-    'accessory_flower': { id: 'accessory_flower', name: '花雨', type: 'equipment', slot: 'accessory', desc: '花瓣凝聚而成的项链，香气袭人。', salePrice: 5000, stats: { mp: 200, critRate: 0.02 }, stackable: false, gemSlots: 3 },
+    'weapon_qinggang': {
+        id: 'weapon_qinggang', name: '青刚剑', type: 'equipment', slot: 'weapon', desc: '百炼精钢打造，削铁如泥。',
+        salePrice: 5000, stats: { atk: 180 }, stackable: false, gemSlots: 3,
+        statsRange: { atk: [170, 190] }
+    },
+    'armor_night': {
+        id: 'armor_night', name: '夜魔披风', type: 'equipment', slot: 'armor', desc: '来自魔界的披风，隐匿气息。',
+        salePrice: 5000, stats: { def: 55, hp: 300 }, stackable: false, gemSlots: 3,
+        statsRange: { def: [50, 60], hp: [280, 320] }
+    },
+    'accessory_flower': {
+        id: 'accessory_flower', name: '花雨', type: 'equipment', slot: 'accessory', desc: '花瓣凝聚而成的项链，香气袭人。',
+        salePrice: 5000, stats: { mp: 200, critRate: 0.02 }, stackable: false, gemSlots: 3,
+        statsRange: { mp: [180, 220], critRate: [0.01, 0.03] }
+    },
 
     // Lv 80
-    'weapon_beidou': { id: 'weapon_beidou', name: '北斗七星剑', type: 'equipment', slot: 'weapon', desc: '剑身镶嵌七星，引动星辰之力。', salePrice: 20000, stats: { atk: 320, critRate: 0.05 }, stackable: false, gemSlots: 4 },
-    'armor_dragon': { id: 'armor_dragon', name: '龙骨甲', type: 'equipment', slot: 'armor', desc: '上古龙骨打磨而成的战甲。', salePrice: 20000, stats: { def: 110, hp: 800 }, stackable: false, gemSlots: 4 },
-    'accessory_phoenix': { id: 'accessory_phoenix', name: '凤翅项链', type: 'equipment', slot: 'accessory', desc: '凤凰羽翼化作的项链，涅槃重生。', salePrice: 20000, stats: { mp: 500, hp: 200, atk: 20 }, stackable: false, gemSlots: 4 },
+    'weapon_beidou': {
+        id: 'weapon_beidou', name: '北斗七星剑', type: 'equipment', slot: 'weapon', desc: '剑身镶嵌七星，引动星辰之力。',
+        salePrice: 20000, stats: { atk: 320, critRate: 0.05 }, stackable: false, gemSlots: 4,
+        statsRange: { atk: [300, 340], critRate: [0.04, 0.06] }
+    },
+    'armor_dragon': {
+        id: 'armor_dragon', name: '龙骨甲', type: 'equipment', slot: 'armor', desc: '上古龙骨打磨而成的战甲。',
+        salePrice: 20000, stats: { def: 110, hp: 800 }, stackable: false, gemSlots: 4,
+        statsRange: { def: [100, 120], hp: [750, 850] }
+    },
+    'accessory_phoenix': {
+        id: 'accessory_phoenix', name: '凤翅项链', type: 'equipment', slot: 'accessory', desc: '凤凰羽翼化作的项链，涅槃重生。',
+        salePrice: 20000, stats: { mp: 500, hp: 200, atk: 20 }, stackable: false, gemSlots: 4,
+        statsRange: { mp: [450, 550], hp: [180, 220], atk: [15, 25] }
+    },
 
     // Lv 100
-    'weapon_yitian': { id: 'weapon_yitian', name: '倚天剑', type: 'equipment', slot: 'weapon', desc: '安得倚天抽宝剑，将汝裁为三截！', salePrice: 100000, stats: { atk: 600, critRate: 0.1 }, stackable: false, gemSlots: 5 },
-    'armor_golden': { id: 'armor_golden', name: '金蚕衣', type: 'equipment', slot: 'armor', desc: '金蚕丝混以天蚕丝织就，水火不侵。', salePrice: 100000, stats: { def: 250, hp: 2000 }, stackable: false, gemSlots: 5 },
-    'accessory_soul': { id: 'accessory_soul', name: '万里追魂', type: 'equipment', slot: 'accessory', desc: '追魂夺命，无处可逃。', salePrice: 100000, stats: { mp: 1000, atk: 50, critRate: 0.05 }, stackable: false, gemSlots: 5 },
+    'weapon_yitian': {
+        id: 'weapon_yitian', name: '倚天剑', type: 'equipment', slot: 'weapon', desc: '安得倚天抽宝剑，将汝裁为三截！',
+        salePrice: 100000, stats: { atk: 600, critRate: 0.1 }, stackable: false, gemSlots: 5,
+        statsRange: { atk: [550, 650], critRate: [0.08, 0.12] }
+    },
+    'armor_golden': {
+        id: 'armor_golden', name: '金蚕衣', type: 'equipment', slot: 'armor', desc: '金蚕丝混以天蚕丝织就，水火不侵。',
+        salePrice: 100000, stats: { def: 250, hp: 2000 }, stackable: false, gemSlots: 5,
+        statsRange: { def: [220, 280], hp: [1800, 2200] }
+    },
+    'accessory_soul': {
+        id: 'accessory_soul', name: '万里追魂', type: 'equipment', slot: 'accessory', desc: '追魂夺命，无处可逃。',
+        salePrice: 100000, stats: { mp: 1000, atk: 50, critRate: 0.05 }, stackable: false, gemSlots: 5,
+        statsRange: { mp: [900, 1100], atk: [40, 60], critRate: [0.04, 0.06] }
+    },
 };
 
 export const getItem = (id: string) => ITEMS[id];

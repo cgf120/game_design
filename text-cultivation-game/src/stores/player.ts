@@ -122,9 +122,20 @@ export const usePlayerStore = defineStore('player', () => {
         const addEquipStats = (slot?: any) => {
             if (!slot || !slot.itemId) return;
 
-            // 1. Item Base Stats
+            // 1. Item Stats (Instance > Base)
             const item = getItem(slot.itemId);
-            if (item?.stats) {
+
+            if (slot.instanceData?.stats) {
+                // Use Randomized Stats
+                const iStats = slot.instanceData.stats;
+                atk += iStats.atk || 0;
+                def += iStats.def || 0;
+                maxHp += iStats.hp || 0;
+                maxMp += iStats.mp || 0;
+                critRate += iStats.critRate || 0;
+                // dodgeRate += iStats.dodgeRate || 0;
+            } else if (item?.stats) {
+                // Fallback to Static Stats
                 atk += item.stats.atk || 0;
                 def += item.stats.def || 0;
                 maxHp += item.stats.hp || 0;

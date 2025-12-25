@@ -152,7 +152,7 @@
 import { computed, ref } from 'vue';
 import { usePlayerStore } from '../stores/player';
 import { getItem } from '../core/constants/items';
-import { useModal } from '../composables/useModal';
+import { useToast } from '../composables/useToast';
 import { useInventoryStore } from '../stores/inventory';
 import { useRouter } from 'vue-router';
 
@@ -177,7 +177,7 @@ import ForgePanel from '../components/home/panels/ForgePanel.vue';
 import breakthroughBg from '@/assets/ui/ui_btn_breakthrough.png';
 
 const playerStore = usePlayerStore();
-const { showModal } = useModal();
+const { addToast } = useToast();
 const router = useRouter();
 
 // --- STATE ---
@@ -319,14 +319,18 @@ function confirmBreakthrough() {
   showBreakthroughModal.value = false;
   const result = playerStore.attemptBreakthrough(breakthroughItemCount.value);
   recentLogs.value.unshift(`[突破] ${result.message}`);
-  showModal({
-      title: result.success ? '突破成功' : '突破失败',
-      content: result.message,
-      showCancel: false
-  });
+  
+  if (result.success) {
+    addToast(result.message, 'success', 5000);
+  } else {
+    addToast(result.message, 'error', 5000);
+  }
 }
 
+import { useModal } from '../composables/useModal';
+
 function confirmReset() {
+  const { showModal } = useModal();
   showModal({
     title: '兵解重修',
     content: '道友确定要放弃当前修为，重新来过吗？此操作无法撤销。',
