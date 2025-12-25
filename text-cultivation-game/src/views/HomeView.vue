@@ -59,7 +59,6 @@
         :items="gridItems"
         @select="handleGridSelect"
     />
-
     <!-- 4. PANELS MODAL -->
     <transition name="fade">
         <HomePanelModal 

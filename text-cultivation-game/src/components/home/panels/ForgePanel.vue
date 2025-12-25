@@ -217,11 +217,46 @@ const totalStats = computed(() => {
     return stats;
 });
 
+function getStatName(key: string) {
+    const map: Record<string, string> = {
+        atk: '攻击',
+        def: '防御',
+        hp: '气血',
+        mp: '真元',
+        critRate: '暴击',
+        dodgeRate: '闪避',
+        maxHp: '气血上限',
+        maxMp: '真元上限'
+    };
+    return map[key] || key;
+}
+
 // Helper to format stat display
 function getStatDiff(key: string, baseVal: number) {
     const total = totalStats.value[key] || 0;
     const diff = total - baseVal;
-    return diff > 0 ? `(+${diff})` : '';
+    
+    if (diff <= 0.000001) return ''; // Float epsilon check
+
+    const isPercent = ['critRate', 'dodgeRate'].includes(key);
+    
+    if (isPercent) {
+        // Format as percentage (e.g. 0.02 -> 2%)
+        // Use Math.round to avoid 1.99999%
+        const pct = Math.round(diff * 1000) / 10; // Keep 1 decimal if needed, or just Math.round(diff * 100)
+        // Let's use 1 decimal place max
+        return `(+${parseFloat((diff * 100).toFixed(1))}%)`;
+    }
+    
+    return `(+${Math.round(diff)})`;
+}
+
+function formatStatValue(key: string, val: number) {
+    const isPercent = ['critRate', 'dodgeRate'].includes(key);
+    if (isPercent) {
+        return `${parseFloat((val * 100).toFixed(1))}%`;
+    }
+    return Math.round(val);
 }
 
 function getGemIcon(itemId: string) {

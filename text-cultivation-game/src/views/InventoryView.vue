@@ -152,7 +152,7 @@ const filteredSlots = computed(() => {
         // Map item.type to category keys
         // Assuming item.type values: 'weapon', 'armor', 'accessory', 'consumable', 'material'
         if (activeCategory.value === 'equipment') {
-            return ['weapon', 'armor', 'accessory'].includes(item?.type || '');
+            return item?.type === 'equipment' || ['weapon', 'armor', 'accessory'].includes(item?.type || '');
         }
         return item?.type === activeCategory.value;
     });

@@ -174,14 +174,17 @@ export const useInventoryStore = defineStore('inventory', () => {
         };
 
         // Force update the slot on the player object
-        // We need to create a new reference for the slot or the instance data
         playerStore.player.equipment[slotName] = {
             ...equipSlot,
             instanceData: newInstanceData
         };
+        // CRITICAL: Force top-level equipment object update to trigger deep watchers
+        playerStore.player.equipment = { ...playerStore.player.equipment };
 
         // Remove gem from inventory
         removeItem(gemId, 1);
+        // CRITICAL: Force top-level inventory array update
+        playerStore.player.inventory = [...playerStore.player.inventory];
 
         playerStore.save();
         return { success: true, msg: `镶嵌成功！` };
@@ -209,9 +212,13 @@ export const useInventoryStore = defineStore('inventory', () => {
                 gems: newGems
             }
         };
+        // CRITICAL: Force top-level equipment update
+        playerStore.player.equipment = { ...playerStore.player.equipment };
 
         // Return to inventory
         addItem(gemId, 1);
+        // CRITICAL: Force top-level inventory update
+        playerStore.player.inventory = [...playerStore.player.inventory];
 
         playerStore.save();
         return { success: true, msg: '已卸下宝石' };

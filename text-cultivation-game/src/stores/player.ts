@@ -204,11 +204,9 @@ export const usePlayerStore = defineStore('player', () => {
             }
         }
 
-        // Also sync Base Stats for consistency (though Combat uses effectiveStats now)
-        if (player.value.stats.atk !== newStats.atk) player.value.stats.atk = newStats.atk;
-        if (player.value.stats.def !== newStats.def) player.value.stats.def = newStats.def;
-        if (player.value.stats.critRate !== newStats.critRate) player.value.stats.critRate = newStats.critRate;
-        if (player.value.stats.dodgeRate !== newStats.dodgeRate) player.value.stats.dodgeRate = newStats.dodgeRate;
+        // REMOVED: Syncing base stats back to player.stats caused infinite loops because
+        // effectiveStats reads from player.stats (cycle).
+        // effectiveStats should be the single source of truth for display/combat.
 
     }, { immediate: true });
 
