@@ -47,29 +47,118 @@
             <div class="h-px bg-neutral-800 flex-1"></div>
         </div>
         <div class="space-y-1">
-                <div class="flex justify-between items-center bg-black p-2 border border-neutral-800 rounded-sm">
+            <!-- WEAPON -->
+            <div 
+                @click="toggleSlot('weapon')"
+                class="flex justify-between items-center bg-black p-2 border border-neutral-800 rounded-sm cursor-pointer hover:border-amber-900/50 hover:bg-neutral-900/50 transition-colors"
+                :class="{ 'border-amber-500/50 bg-amber-900/10': activeSlot === 'weapon' }"
+            >
                 <span class="text-neutral-500 flex items-center gap-2">
                      <div class="w-6 h-6 bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xs">武</div>
                      <span>武器</span>
                 </span>
-                <span class="text-amber-700">{{ getEquipName(equipment?.weapon) }}</span>
+                <div class="flex items-center gap-1">
+                    <span class="text-amber-700">{{ getEquipName(equipment?.weapon) }}</span>
+                    <span v-if="equipment?.weapon" class="text-neutral-600 text-[10px] transform transition-transform" :class="activeSlot === 'weapon' ? 'rotate-90' : ''">▶</span>
                 </div>
-                <div class="flex justify-between items-center bg-black p-2 border border-neutral-800 rounded-sm">
+            </div>
+            <!-- Weapon Detail -->
+            <div v-if="activeSlot === 'weapon' && equipment?.weapon" class="bg-black/40 border-x border-b border-neutral-800 p-2 mb-2 text-xs">
+                <div class="text-[10px] text-neutral-400 mb-1 leading-relaxed">{{ getItem(getEquipId(equipment?.weapon)!)?.desc }}</div>
+                 <div class="space-y-1 font-mono">
+                    <div v-for="stat in getItemStatsList(getEquipId(equipment?.weapon)!)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
+                        <span class="text-neutral-500">{{ stat.label }}</span>
+                        <span :class="stat.color">{{ stat.value }}</span>
+                    </div>
+                 </div>
+                 <div v-if="getItem(getEquipId(equipment?.weapon)!)?.gemSlots" class="mt-2 pt-2 border-t border-white/5 flex gap-2">
+                     <div class="text-[10px] text-neutral-500">孔位:</div>
+                     <div class="flex gap-1">
+                        <div v-for="n in (getItem(getEquipId(equipment?.weapon)!)?.gemSlots || 0)" :key="n" class="w-4 h-4 bg-black border border-neutral-800 rounded-full flex items-center justify-center">
+                            <span v-if="equipment.weapon.instanceData?.gems?.[n-1]" class="text-[8px]">💎</span>
+                            <span v-else class="text-neutral-800 text-[8px]">+</span>
+                        </div>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- ARMOR -->
+            <div 
+                @click="toggleSlot('armor')"
+                class="flex justify-between items-center bg-black p-2 border border-neutral-800 rounded-sm cursor-pointer hover:border-blue-900/50 hover:bg-neutral-900/50 transition-colors"
+                :class="{ 'border-blue-500/50 bg-blue-900/10': activeSlot === 'armor' }"
+            >
                 <span class="text-neutral-500 flex items-center gap-2">
                      <div class="w-6 h-6 bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xs">甲</div>
                      <span>衣袍</span>
                 </span>
-                <span class="text-blue-700">{{ getEquipName(equipment?.armor) }}</span>
+                <div class="flex items-center gap-1">
+                     <span class="text-blue-700">{{ getEquipName(equipment?.armor) }}</span>
+                     <span v-if="equipment?.armor" class="text-neutral-600 text-[10px] transform transition-transform" :class="activeSlot === 'armor' ? 'rotate-90' : ''">▶</span>
                 </div>
-                <div class="flex justify-between items-center bg-black p-2 border border-neutral-800 rounded-sm">
+            </div>
+            <!-- Armor Detail -->
+            <div v-if="activeSlot === 'armor' && equipment?.armor" class="bg-black/40 border-x border-b border-neutral-800 p-2 mb-2 text-xs">
+                <div class="text-[10px] text-neutral-400 mb-1 leading-relaxed">{{ getItem(getEquipId(equipment?.armor)!)?.desc }}</div>
+                 <div class="space-y-1 font-mono">
+                    <div v-for="stat in getItemStatsList(getEquipId(equipment?.armor)!)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
+                        <span class="text-neutral-500">{{ stat.label }}</span>
+                        <span :class="stat.color">{{ stat.value }}</span>
+                    </div>
+                 </div>
+                 <div v-if="getItem(getEquipId(equipment?.armor)!)?.gemSlots" class="mt-2 pt-2 border-t border-white/5 flex gap-2">
+                     <div class="text-[10px] text-neutral-500">孔位:</div>
+                     <div class="flex gap-1">
+                        <div v-for="n in (getItem(getEquipId(equipment?.armor)!)?.gemSlots || 0)" :key="n" class="w-4 h-4 bg-black border border-neutral-800 rounded-full flex items-center justify-center">
+                            <span v-if="equipment.armor.instanceData?.gems?.[n-1]" class="text-[8px]">💎</span>
+                            <span v-else class="text-neutral-800 text-[8px]">+</span>
+                        </div>
+                     </div>
+                 </div>
+            </div>
+            
+            <!-- ACCESSORY -->
+            <div 
+                @click="toggleSlot('accessory')"
+                class="flex justify-between items-center bg-black p-2 border border-neutral-800 rounded-sm cursor-pointer hover:border-purple-900/50 hover:bg-neutral-900/50 transition-colors"
+                :class="{ 'border-purple-500/50 bg-purple-900/10': activeSlot === 'accessory' }"
+            >
                 <span class="text-neutral-500 flex items-center gap-2">
                      <div class="w-6 h-6 bg-neutral-900 border border-neutral-800 flex items-center justify-center text-xs">宝</div>
                     <span>法器</span>
                 </span>
-                <span class="text-purple-700">{{ getEquipName(equipment?.accessory) }}</span>
+                <div class="flex items-center gap-1">
+                    <span class="text-purple-700">{{ getEquipName(equipment?.accessory) }}</span>
+                    <span v-if="equipment?.accessory" class="text-neutral-600 text-[10px] transform transition-transform" :class="activeSlot === 'accessory' ? 'rotate-90' : ''">▶</span>
                 </div>
+            </div>
+            <!-- Accessory Detail -->
+             <div v-if="activeSlot === 'accessory' && equipment?.accessory" class="bg-black/40 border-x border-b border-neutral-800 p-2 mb-2 text-xs">
+                <div class="text-[10px] text-neutral-400 mb-1 leading-relaxed">{{ getItem(getEquipId(equipment?.accessory)!)?.desc }}</div>
+                 <div class="space-y-1 font-mono">
+                    <div v-for="stat in getItemStatsList(getEquipId(equipment?.accessory)!)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
+                        <span class="text-neutral-500">{{ stat.label }}</span>
+                        <span :class="stat.color">{{ stat.value }}</span>
+                    </div>
+                 </div>
+                 <div v-if="getItem(getEquipId(equipment?.accessory)!)?.gemSlots" class="mt-2 pt-2 border-t border-white/5 flex gap-2">
+                     <div class="text-[10px] text-neutral-500">孔位:</div>
+                     <div class="flex gap-1">
+                        <div v-for="n in (getItem(getEquipId(equipment?.accessory)!)?.gemSlots || 0)" :key="n" class="w-4 h-4 bg-black border border-neutral-800 rounded-full flex items-center justify-center">
+                            <span v-if="equipment.accessory.instanceData?.gems?.[n-1]" class="text-[8px]">💎</span>
+                            <span v-else class="text-neutral-800 text-[8px]">+</span>
+                        </div>
+                     </div>
+                 </div>
+            </div>
         </div>
     </div>
+
+    <!-- Item Detail Inline Component -->
+    <!-- Helper component to avoid repetition -->
+    <!-- We will inline the v-if logic for simplicity -->
+
+
 
     <!-- Spirit Root -->
     <div>
@@ -106,9 +195,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref } from 'vue';
 import { getItem } from '../../../core/constants/items';
 import XianxiaIcon from '../../shared/XianxiaIcon.vue';
+import type { InventorySlot } from '../../../core/models/item';
+import { getItemStatsList } from '../../../core/utils/item';
 
 const props = defineProps<{
     stats: any;
@@ -116,8 +207,27 @@ const props = defineProps<{
     spiritRoot: any;
 }>();
 
-function getEquipName(id?: string) {
+const activeSlot = ref<'weapon' | 'armor' | 'accessory' | null>(null);
+
+function getEquipId(data?: string | InventorySlot): string | undefined {
+    if (!data) return undefined;
+    if (typeof data === 'object' && 'itemId' in data) return data.itemId;
+    return data as string;
+}
+
+function getEquipName(data?: string | InventorySlot) {
+    const id = getEquipId(data);
     if (!id) return '空';
     return getItem(id)?.name || '未知';
+}
+
+function toggleSlot(slot: 'weapon' | 'armor' | 'accessory') {
+    if (!props.equipment || !props.equipment[slot]) return;
+    
+    if (activeSlot.value === slot) {
+        activeSlot.value = null;
+    } else {
+        activeSlot.value = slot;
+    }
 }
 </script>

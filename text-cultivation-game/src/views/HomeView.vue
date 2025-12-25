@@ -13,7 +13,7 @@
     />
 
     <!-- 2. CHARACTER VISUALIZER -->
-    <div class="flex-1 flex flex-col justify-center min-h-0 relative">
+    <div class="flex-none relative bg-black/20">
          <CharacterVisualizer 
             :progress="progressPercentage"
             :efficiency-text="efficiencyText"
@@ -23,8 +23,38 @@
          />
     </div>
 
-    <!-- 3. FUNCTION GRID (Bottom Control) -->
-    <!-- Pushed to bottom, fixed height -->
+    <!-- 3. QUICK STATS ROW -->
+    <div class="flex-1 min-h-0 bg-neutral-900/30 border-t border-purple-900/20 p-3 overflow-y-auto">
+         <div class="grid grid-cols-3 gap-3 h-full content-start">
+             <!-- Stat Items -->
+             <div class="bg-black/40 border border-white/10 p-2.5 rounded flex flex-col items-center justify-center gap-1 hover:border-amber-500/30 transition-colors">
+                 <span class="text-neutral-500 text-[10px] tracking-widest uppercase scale-90">攻击</span>
+                 <span class="text-amber-500 font-mono text-lg font-medium text-shadow-sm">{{ stats.atk }}</span>
+             </div>
+             <div class="bg-black/40 border border-white/10 p-2.5 rounded flex flex-col items-center justify-center gap-1 hover:border-blue-500/30 transition-colors">
+                 <span class="text-neutral-500 text-[10px] tracking-widest uppercase scale-90">防御</span>
+                 <span class="text-blue-500 font-mono text-lg font-medium text-shadow-sm">{{ stats.def }}</span>
+             </div>
+              <div class="bg-black/40 border border-white/10 p-2.5 rounded flex flex-col items-center justify-center gap-1 hover:border-purple-500/30 transition-colors">
+                 <span class="text-neutral-500 text-[10px] tracking-widest uppercase scale-90">暴击</span>
+                 <span class="text-purple-400 font-mono text-lg font-medium text-shadow-sm">{{ (stats.critRate * 100).toFixed(0) }}%</span>
+             </div>
+             <div class="bg-black/40 border border-white/10 p-2.5 rounded flex flex-col items-center justify-center gap-1 hover:border-green-500/30 transition-colors">
+                 <span class="text-neutral-500 text-[10px] tracking-widest uppercase scale-90">气血</span>
+                 <span class="text-green-500 font-mono text-sm font-medium tracking-tight">{{ Math.floor(stats.hp) }}<span class="text-green-800">/</span>{{ stats.maxHp }}</span>
+             </div>
+             <div class="bg-black/40 border border-white/10 p-2.5 rounded flex flex-col items-center justify-center gap-1 hover:border-sky-500/30 transition-colors">
+                 <span class="text-neutral-500 text-[10px] tracking-widest uppercase scale-90">灵力</span>
+                 <span class="text-sky-500 font-mono text-sm font-medium tracking-tight">{{ Math.floor(stats.mp) }}<span class="text-sky-900">/</span>{{ stats.maxMp }}</span>
+             </div>
+              <div class="bg-black/40 border border-white/10 p-2.5 rounded flex flex-col items-center justify-center gap-1 hover:border-neutral-500/30 transition-colors">
+                 <span class="text-neutral-500 text-[10px] tracking-widest uppercase scale-90">闪避</span>
+                 <span class="text-neutral-300 font-mono text-lg font-medium text-shadow-sm">{{ (stats.dodgeRate * 100).toFixed(0) }}%</span>
+             </div>
+         </div>
+    </div>
+
+    <!-- 4. FUNCTION GRID (Bottom Control) -->
     <FunctionGrid 
         :items="gridItems"
         @select="handleGridSelect"
@@ -122,7 +152,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { usePlayerStore } from '../stores/player';
-import { useSkillStore } from '../stores/skill';
 import { getItem } from '../core/constants/items';
 import { useModal } from '../composables/useModal';
 import { useInventoryStore } from '../stores/inventory';
@@ -143,6 +172,7 @@ import SkillPanel from '../components/home/panels/SkillPanel.vue';
 import LogPanel from '../components/home/panels/LogPanel.vue';
 import SpiritRootPanel from '../components/home/panels/SpiritRootPanel.vue';
 import SettingsPanel from '../components/home/panels/SettingsPanel.vue';
+import ForgePanel from '../components/home/panels/ForgePanel.vue';
 
 // Assets
 import breakthroughBg from '@/assets/ui/ui_btn_breakthrough.png';
@@ -175,6 +205,7 @@ const efficiencyText = computed(() => `修炼效率: +${playerStore.cultivationR
 const gridItems = computed<GridItem[]>(() => [
     { id: 'stats', label: '属性', icon: 'ui_stat_atk', fallback: '📊' },      // Used ATK icon as proxy for Stats
     { id: 'skills', label: '神通', icon: 'ui_stat_mp', fallback: '⚡' },       // Used MP icon (blue energy) for Skills
+    { id: 'forge', label: '炼器', icon: 'ui_icon_furnace', fallback: '🔥' },   // New Forge
     { id: 'roots', label: '灵根', icon: 'ui_bg_mandala', fallback: '🌱' },     // Used Mandala for Spirit Roots (abstract)
     { id: 'bag', label: '储物', icon: 'ui_nav_inventory', fallback: '🎒' },    // Exists!
     { id: 'logs', label: '日志', icon: 'ui_nav_sect', fallback: '📜' },        // Used Sect icon (building/scrolls often related)
@@ -200,6 +231,7 @@ const activePanelComponent = computed(() => {
         case 'roots': return SpiritRootPanel;
         case 'logs': return LogPanel;
         case 'settings': return SettingsPanel;
+        case 'forge': return ForgePanel;
         default: return null;
     }
 });

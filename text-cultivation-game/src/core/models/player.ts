@@ -15,9 +15,9 @@ export interface PlayerStats {
 }
 
 export interface PlayerEquipment {
-    weapon?: string; // Item ID
-    armor?: string;  // Item ID
-    accessory?: string; // Item ID
+    weapon?: InventorySlot;
+    armor?: InventorySlot;
+    accessory?: InventorySlot;
 }
 
 export interface SpiritRoot {

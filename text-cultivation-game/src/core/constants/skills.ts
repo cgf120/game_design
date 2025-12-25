@@ -89,3 +89,7 @@ export const SKILLS: Record<string, Skill> = {
         reqRealmId: 1
     }
 };
+
+export function getSkill(id: string): Skill | undefined {
+    return SKILLS[id];
+}

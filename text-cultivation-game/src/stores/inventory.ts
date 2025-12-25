@@ -2,19 +2,15 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { InventorySlot } from '../core/models/item';
 import { ITEMS, getItem } from '../core/constants/items';
+import { getSkill } from '../core/constants/skills'; // Static import
 import { usePlayerStore } from './player';
-import { useSkillStore } from './skill'; // Import SkillStore
-
-import { SaveService } from '../core/services/SaveService';
+import { useSkillStore } from './skill';
 
 export const useInventoryStore = defineStore('inventory', () => {
-    const playerStore = usePlayerStore(); // Get player store instance
+    const playerStore = usePlayerStore();
 
-    // Inventory is now managed by playerStore.player.inventory
-    // We can expose it as a computed property
     const inventory = computed(() => playerStore.player.inventory);
 
-    // Helper to get all items in the bag (if needed, otherwise remove)
     function getBagItems(): InventorySlot[] {
         return playerStore.player.inventory;
     }
@@ -33,27 +29,17 @@ export const useInventoryStore = defineStore('inventory', () => {
         const item = getItem(itemId);
         if (!item) return false;
 
-        // 1. Stackable Check
         if (item.stackable) {
             const existing = playerStore.player.inventory.find(s => s.itemId === itemId);
             if (existing) {
                 existing.count += count;
-                playerStore.save(); // Save after modification
+                playerStore.save();
                 return true;
             }
         }
 
-        // 2. New Slot Check (assuming MAX_SLOTS is still relevant or handled by playerStore)
-        // If playerStore.player.inventory has a max size, check it here.
-        // For now, let's assume it can grow.
-        // const MAX_SLOTS = 20; // If you want to re-introduce a max slot limit
-        // if (playerStore.player.inventory.length >= MAX_SLOTS) {
-        //     return false; // Bag full
-        // }
-
-        // 3. Add Item
         playerStore.player.inventory.push({ itemId, count });
-        playerStore.save(); // Save after modification
+        playerStore.save();
         return true;
     }
 
@@ -68,27 +54,37 @@ export const useInventoryStore = defineStore('inventory', () => {
         if (slot.count <= 0) {
             playerStore.player.inventory.splice(idx, 1);
         }
-        playerStore.save(); // Save after modification
+        playerStore.save();
         return true;
     }
 
     function equipItem(itemId: string): boolean {
-        const item = getItem(itemId);
-        if (!item || !['weapon', 'armor', 'accessory'].includes(item.type)) return false;
+        const itemDef = getItem(itemId);
+        // Fix: Allow 'equipment' type
+        if (!itemDef || (itemDef.type !== 'equipment' && !['weapon', 'armor', 'accessory'].includes(itemDef.type))) return false;
 
-        // Unequip current slot if needed
-        const slot = item.type as 'weapon' | 'armor' | 'accessory';
-        const currentEquipId = playerStore.player.equipment[slot];
+        const slotName = itemDef.slot as 'weapon' | 'armor' | 'accessory';
+        if (!slotName) return false;
 
-        if (currentEquipId) {
-            // Return to inventory
-            addItem(currentEquipId, 1);
+        // Find the specific slot in inventory
+        const invIndex = playerStore.player.inventory.findIndex(s => s.itemId === itemId);
+        if (invIndex === -1) return false;
+        const slotToEquip = playerStore.player.inventory[invIndex];
+
+        // Handle existing equipped item
+        const currentEquipSlot = playerStore.player.equipment[slotName];
+        if (currentEquipSlot) {
+            // Move currently equipped item back to inventory
+            // Directly push the object to preserve instanceData
+            playerStore.player.inventory.push(currentEquipSlot);
         }
 
-        playerStore.player.equipment[slot] = itemId;
-        removeItem(itemId, 1); // Remove from inventory after equipping
+        // Equip the new item (Assign the object)
+        playerStore.player.equipment[slotName] = slotToEquip;
 
-        playerStore.recalcStats();
+        // Remove from inventory
+        playerStore.player.inventory.splice(invIndex, 1);
+
         playerStore.save();
         return true;
     }
@@ -99,22 +95,31 @@ export const useInventoryStore = defineStore('inventory', () => {
             return { success: false, msg: '该物品无法使用' };
         }
 
-        // Check ownership
         if (!hasItem(itemId, 1)) return { success: false, msg: '物品不足' };
 
-        // Handle Effects
         const effect = item.useEffect;
 
         if (effect.type === 'learn_skill') {
             const skillStore = useSkillStore();
             if (skillStore.learnSkill(effect.value)) {
                 removeItem(itemId, 1);
-                return { success: true, msg: `习得技能: ${effect.value}` }; // ideally show skill name
+
+                const skill = getSkill(effect.value);
+                const skillName = skill ? skill.name : effect.value;
+                return { success: true, msg: `习得技能: ${skillName}` };
             } else {
                 return { success: false, msg: '无法学习 (已学会或境界不足)' };
             }
-        } else if (effect.type === 'restore_hp') { // Example for existing HP restore logic
-            const amount = effect.value || 0;
+        } else if (effect.type === 'restore_hp') {
+            // Note: effect.value is string in type definition, cast to number if needed
+            // But usually defined as number in constants? Let's check logic.
+            // Actually useEffect value is string in model, so might need parsing or distinct field.
+            // Using effectValue for numeric effects usually.
+            // Checking items.ts: manual uses useEffect {type, value}, pills don't have useEffect yet?
+            // Actually pills in items.ts don't have useEffect defined yet, needed for restore.
+            // Assuming restore logic implies numeric value.
+
+            const amount = parseInt(effect.value) || 0;
             playerStore.player.stats.hp = Math.min(
                 playerStore.player.stats.maxHp,
                 playerStore.player.stats.hp + amount
@@ -127,20 +132,102 @@ export const useInventoryStore = defineStore('inventory', () => {
         return { success: false, msg: '未知效果' };
     }
 
-    // Save/Load helpers (if needed, but player store handles persistence of inventory data)
     function save() {
         playerStore.save();
     }
 
+    // Socket a gem into an EQUIPPED item
+    function socketGemToEquipped(slotName: 'weapon' | 'armor' | 'accessory', gemId: string): { success: boolean, msg: string } {
+        const equipSlot = playerStore.player.equipment[slotName];
+        if (!equipSlot) return { success: false, msg: '该部位未装备物品' };
+
+        const equipItem = getItem(equipSlot.itemId);
+        if (!equipItem) return { success: false, msg: '装备数据错误' };
+
+        // Check Gem
+        if (!hasItem(gemId, 1)) return { success: false, msg: '缺少宝石' };
+        const gemItem = getItem(gemId);
+        if (!gemItem || !gemItem.type) return { success: false, msg: '宝石无效' };
+
+        // Check Max Slots
+        const maxSlots = equipItem.gemSlots || 0;
+        if (maxSlots <= 0) return { success: false, msg: '此装备无法镶嵌宝石' };
+
+        // Init instance data if needed
+        if (!equipSlot.instanceData) {
+            equipSlot.instanceData = { gems: [], level: 0 };
+        }
+        if (!equipSlot.instanceData.gems) {
+            equipSlot.instanceData.gems = [];
+        }
+
+        const currentGems = equipSlot.instanceData.gems;
+        if (currentGems.length >= maxSlots) {
+            return { success: false, msg: '宝石孔已满' };
+        }
+
+        // Socket it
+        // Reassign array to ensure reactivity triggers
+        const newInstanceData = {
+            ...equipSlot.instanceData,
+            gems: [...currentGems, gemId]
+        };
+
+        // Force update the slot on the player object
+        // We need to create a new reference for the slot or the instance data
+        playerStore.player.equipment[slotName] = {
+            ...equipSlot,
+            instanceData: newInstanceData
+        };
+
+        // Remove gem from inventory
+        removeItem(gemId, 1);
+
+        playerStore.save();
+        return { success: true, msg: `镶嵌成功！` };
+    }
+
+    // Unsocket a gem from an EQUIPPED item
+    function unsocketGemFromEquipped(slotName: 'weapon' | 'armor' | 'accessory', gemIndex: number): { success: boolean, msg: string } {
+        const equipSlot = playerStore.player.equipment[slotName];
+        if (!equipSlot) return { success: false, msg: '该部位未装备物品' };
+
+        if (!equipSlot.instanceData || !equipSlot.instanceData.gems || !equipSlot.instanceData.gems[gemIndex]) {
+            return { success: false, msg: '该孔位没有宝石' };
+        }
+
+        const gemId = equipSlot.instanceData.gems[gemIndex];
+
+        // Create new gem list
+        const newGems = equipSlot.instanceData.gems.filter((_, index) => index !== gemIndex);
+
+        // Force update by replacing the equipment slot object
+        playerStore.player.equipment[slotName] = {
+            ...equipSlot,
+            instanceData: {
+                ...equipSlot.instanceData,
+                gems: newGems
+            }
+        };
+
+        // Return to inventory
+        addItem(gemId, 1);
+
+        playerStore.save();
+        return { success: true, msg: '已卸下宝石' };
+    }
+
     return {
-        inventory, // Expose as computed property
+        inventory,
         getBagItems,
         addItem,
         removeItem,
         hasItem,
         getItemCount,
-        equipItem, // Export equipItem
-        useItem,   // Export useItem
-        save
+        equipItem,
+        useItem,
+        save,
+        socketGemToEquipped,
+        unsocketGemFromEquipped
     };
 });

@@ -113,18 +113,39 @@ export const usePlayerStore = defineStore('player', () => {
         let atk = realm ? realm.atkBonus : 10;
         let def = realm ? realm.defBonus : 5;
         let maxHp = realm ? realm.hpBonus : 100;
-        let maxMp = realm ? realm.mpBonus : 50; // Use defined MP bonus
+        let maxMp = realm ? realm.mpBonus : 50;
+        let critRate = player.value.stats.critRate || 0;
+        let dodgeRate = player.value.stats.dodgeRate || 0;
 
         // 2. Add Equipment Bonuses
         const equip = player.value.equipment;
-        const addEquipStats = (itemId?: string) => {
-            if (!itemId) return;
-            const item = getItem(itemId);
+        const addEquipStats = (slot?: any) => {
+            if (!slot || !slot.itemId) return;
+
+            // 1. Item Base Stats
+            const item = getItem(slot.itemId);
             if (item?.stats) {
                 atk += item.stats.atk || 0;
                 def += item.stats.def || 0;
                 maxHp += item.stats.hp || 0;
                 maxMp += item.stats.mp || 0;
+                critRate += item.stats.critRate || 0;
+                // dodgeRate += item.stats.dodgeRate || 0; // Add to ItemStats if needed later
+            }
+
+            // 2. Gem Stats
+            if (slot.instanceData?.gems) {
+                slot.instanceData.gems.forEach((gemId: string) => {
+                    const gem = getItem(gemId);
+                    if (gem?.stats) {
+                        atk += gem.stats.atk || 0;
+                        def += gem.stats.def || 0;
+                        maxHp += gem.stats.hp || 0;
+                        maxMp += gem.stats.mp || 0;
+                        critRate += gem.stats.critRate || 0;
+                        // dodgeRate += gem.stats.dodgeRate || 0;
+                    }
+                });
             }
         };
 
@@ -132,7 +153,7 @@ export const usePlayerStore = defineStore('player', () => {
         addEquipStats(equip.armor);
         addEquipStats(equip.accessory);
 
-        // 3. Return Combined Stats (Current HP/MP comes from state, Max comes from calc)
+        // 3. Return Combined Stats
         return {
             atk,
             def,
@@ -140,8 +161,8 @@ export const usePlayerStore = defineStore('player', () => {
             maxMp,
             hp: player.value.stats.hp,
             mp: player.value.stats.mp,
-            critRate: player.value.stats.critRate, // These could also be dynamic later
-            dodgeRate: player.value.stats.dodgeRate
+            critRate,
+            dodgeRate
         };
     });
 
@@ -186,6 +207,8 @@ export const usePlayerStore = defineStore('player', () => {
         // Also sync Base Stats for consistency (though Combat uses effectiveStats now)
         if (player.value.stats.atk !== newStats.atk) player.value.stats.atk = newStats.atk;
         if (player.value.stats.def !== newStats.def) player.value.stats.def = newStats.def;
+        if (player.value.stats.critRate !== newStats.critRate) player.value.stats.critRate = newStats.critRate;
+        if (player.value.stats.dodgeRate !== newStats.dodgeRate) player.value.stats.dodgeRate = newStats.dodgeRate;
 
     }, { immediate: true });
 
@@ -279,8 +302,8 @@ export const usePlayerStore = defineStore('player', () => {
         location.reload();
     }
 
-    function equipItem(slot: 'weapon' | 'armor' | 'accessory', itemId: string) {
-        player.value.equipment[slot] = itemId;
+    function equipItem(slot: 'weapon' | 'armor' | 'accessory', itemSlot: any) {
+        player.value.equipment[slot] = itemSlot; // Expects InventorySlot object
         save();
     }
 
