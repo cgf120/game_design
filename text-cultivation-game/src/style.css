@@ -18,29 +18,29 @@
 
 :root {
     /* Backgrounds */
-    --c-void: #0c0c0c;
-    --c-ink-base: #1c1c1e;
+    --c-void: #050505;
+    /* Deepest black */
+    --c-ink-base: #121212;
     /* Panel BG */
-    --c-ink-deep: #151517;
+    --c-ink-deep: #0a0a0a;
     /* Darker areas */
 
     /* Text */
     --c-text-primary: #e0d6c8;
     /* Warm White */
-    --c-text-secondary: #a09a8e;
+    --c-text-secondary: #8c867a;
     /* Muted Beige */
-    --c-text-muted: #666055;
+    --c-text-muted: #555;
 
     /* Accents */
-    --c-gold: #d4af37;
-    --c-gold-dim: #8a7329;
-    --c-jade: #7fb069;
-    --c-blue: #5bc0de;
-    --c-cinnabar: #d9534f;
+    --c-gold: #ffd700;
+    --c-gold-dim: #b8860b;
+    --c-jade: #00ff7f;
+    --c-blue: #00bfff;
+    --c-cinnabar: #ff4500;
 
     /* Borders */
-    --b-color: #383530;
-    --b-color-gold: #5c4d26;
+    --b-color: #333;
 }
 
 body {
@@ -49,6 +49,49 @@ body {
     font-family: "KaiTi", "STKaiti", "BiauKai", "Georgia", "Times New Roman", serif;
     /* Fallback stack for Chinese Serif */
     -webkit-font-smoothing: antialiased;
+}
+
+/* Unicode Border Utility */
+.unicode-border {
+    position: relative;
+    border: 1px solid #333;
+    background: var(--c-ink-base);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.unicode-border::after {
+    content: "╔════════════════════════════════════════════════════════════╗";
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #444;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Glow Effects */
+.text-glow-gold {
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.text-glow-jade {
+    text-shadow: 0 0 5px rgba(0, 255, 127, 0.5);
+}
+
+.text-glow-blue {
+    text-shadow: 0 0 5px rgba(0, 191, 255, 0.5);
+}
+
+.text-glow-red {
+    text-shadow: 0 0 5px rgba(255, 69, 0, 0.5);
+}
+
+.box-glow {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 /* Talisman/Ink Card Style */
@@ -73,6 +116,7 @@ body {
     pointer-events: none;
 }
 
+/* Standard Colors with Variables */
 .text-gold {
     color: var(--c-gold);
 }
@@ -94,5 +138,9 @@ body {
 }
 
 .bg-ink {
+    background-color: var(--c-void);
+}
+
+.bg-ink-base {
     background-color: var(--c-ink-base);
 }

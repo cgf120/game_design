@@ -24,6 +24,11 @@ export const useInventoryStore = defineStore('inventory', () => {
         return slot ? slot.count >= count : false;
     }
 
+    function getItemCount(itemId: string): number {
+        const slot = playerStore.player.inventory.find(s => s.itemId === itemId);
+        return slot ? slot.count : 0;
+    }
+
     function addItem(itemId: string, count: number = 1): boolean {
         const item = getItem(itemId);
         if (!item) return false;
@@ -133,6 +138,7 @@ export const useInventoryStore = defineStore('inventory', () => {
         addItem,
         removeItem,
         hasItem,
+        getItemCount,
         equipItem, // Export equipItem
         useItem,   // Export useItem
         save

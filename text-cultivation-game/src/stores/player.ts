@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import type { Player } from '../core/models/player';
-import { getRealm } from '../core/constants/realms';
+import { getRealm, REALMS } from '../core/constants/realms';
 import { getItem } from '../core/constants/items';
 import { SaveService } from '../core/services/SaveService';
 
@@ -90,19 +90,20 @@ export const usePlayerStore = defineStore('player', () => {
         abode: savedPlayer.abode || defaultState.abode
     } : defaultState);
 
-    // --- Getters ---
+    // Start of Getters
     const currentRealm = computed(() => getRealm(player.value.cultivation.realmId));
 
-    // Helper to calculate raw base stats (moved from effectiveStats to be reusable if needed, but effectiveStats is fine)
-    // We just need to ensure that on load, if our maxHp is mismatching the expected maxHp, we update it.
 
-    // ... [Getters continue] ...
-    const nextRealm = computed(() => getRealm(player.value.cultivation.realmId + 1));
+    const nextRealm = computed(() => {
+        const currentId = player.value.cultivation.realmId;
+        return REALMS.find(r => r.id > currentId); // Assumes REALMS is sorted by ID
+    });
+
     const maxExp = computed(() => currentRealm.value?.expReq || 999999999);
     const progressPercentage = computed(() => {
         if (!currentRealm.value) return 0;
         const pct = (player.value.cultivation.currentExp / maxExp.value) * 100;
-        return Math.min(pct, 100);
+        return pct;
     });
 
     // Dynamic Stats (Realm Base + Equipment + Buffs)
@@ -194,31 +195,69 @@ export const usePlayerStore = defineStore('player', () => {
         // Check auto-cap or bottleneck logic can go here or in a service
     }
 
-    function attemptBreakthrough(): boolean {
-        if (!currentRealm.value || !nextRealm.value) return false;
+    function attemptBreakthrough(itemCount: number = 0): { success: boolean, message: string } {
+        if (!currentRealm.value || !nextRealm.value) return { success: false, message: '已至巅峰' };
 
-        if (player.value.cultivation.currentExp >= currentRealm.value.expReq) {
-            // Success!
+        if (player.value.cultivation.currentExp < currentRealm.value.expReq) {
+            return { success: false, message: '修为不足' };
+        }
+
+        const req = currentRealm.value.breakthroughReq;
+        let probability = req?.probability ?? 1.0;
+        let bonus = 0;
+        let finalItemCount = 0;
+
+        // Check for material
+        const inventoryStore = useInventoryStore();
+        if (req?.itemId) {
+            const hasCount = inventoryStore.getItemCount(req.itemId);
+
+            // Validate requested count
+            finalItemCount = Math.min(itemCount, hasCount);
+
+            if (finalItemCount > 0) {
+                const item = getItem(req.itemId);
+                const unitBonus = item?.breakthroughBonus || 0;
+                bonus = unitBonus * finalItemCount;
+            }
+        }
+
+        const finalProb = Math.min(1.0, probability + bonus);
+        const roll = Math.random();
+
+        console.log(`[Breakthrough] Base: ${probability}, Count: ${finalItemCount}, Bonus: ${bonus}, Final: ${finalProb}, Roll: ${roll}`);
+
+        if (roll < finalProb) {
+            // Success
             player.value.cultivation.currentExp -= currentRealm.value.expReq;
-            player.value.cultivation.realmId += 1;
+            player.value.cultivation.realmId = nextRealm.value.id;
 
-            // Full Heal on Breakthrough
-            // Computed effectiveStats should be reactive, but let's ensure we get the latest
+            // Consume items
+            if (finalItemCount > 0 && req?.itemId) {
+                inventoryStore.removeItem(req.itemId, finalItemCount);
+            }
+
+            // Full Heal
             const stats = effectiveStats.value;
-
-            // Note: We might need nextTick if we were waiting for DOM, but for data it should be fine.
-            // If previous implementation relied on setTimeout, maybe there was a subtle reactivity issue?
-            // Let's assume accessing .value triggers re-calc.
             if (player.value.stats) {
                 player.value.stats.hp = stats.maxHp;
                 player.value.stats.mp = stats.maxMp;
             }
             save();
+            return { success: true, message: '突破成功！境界提升，寿元与实力大增。' };
+        } else {
+            // Failure
+            const penalty = Math.floor(currentRealm.value.expReq * 0.8);
+            player.value.cultivation.currentExp = Math.max(0, player.value.cultivation.currentExp - penalty);
 
-            return true;
+            // Consume items
+            if (finalItemCount > 0 && req?.itemId) {
+                inventoryStore.removeItem(req.itemId, finalItemCount);
+            }
+
+            save();
+            return { success: false, message: `突破失败！心魔干扰，修为倒退 ${penalty} 点。` };
         }
-
-        return false;
     }
 
 

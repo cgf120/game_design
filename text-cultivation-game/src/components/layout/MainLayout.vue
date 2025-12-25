@@ -1,7 +1,7 @@
 <template>
   <div class="h-screen overflow-hidden bg-ink text-primary font-serif flex flex-col">
-    <!-- Top Status Bar -->
-    <header class="border-b border-ink p-2 text-xs flex justify-between items-center sticky top-0 z-10 bg-ink-base backdrop-blur-sm">
+    <!-- Top Status Bar (Hidden on Home) -->
+    <header v-if="route.path !== '/'" class="border-b border-ink p-2 text-xs flex justify-between items-center sticky top-0 z-10 bg-ink-base backdrop-blur-sm">
       <div class="flex gap-4">
         <span class="text-gold font-bold">境界: {{ currentRealmName }}</span>
         <span class="text-jade">灵石: {{ spiritStones }}</span>
@@ -44,8 +44,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { usePlayerStore } from '../../stores/player';
 
+const route = useRoute();
 const playerStore = usePlayerStore();
 
 const currentRealmName = computed(() => playerStore.currentRealm?.name || '凡人');

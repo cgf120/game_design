@@ -18,6 +18,8 @@ export interface Item {
     slot?: EquipmentSlot; // For equipment
     stats?: ItemStats;    // For equipment
     effectValue?: number; // For consumables (e.g. restore HP)
+    useEffect?: { type: string, value: string }; // For special consumables
+    breakthroughBonus?: number; // Probability boost (0.0 - 1.0)
     stackable: boolean;
 }
 

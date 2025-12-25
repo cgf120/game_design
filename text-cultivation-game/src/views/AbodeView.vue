@@ -1,170 +1,177 @@
 <template>
-  <div class="h-full flex flex-col p-4 gap-4 overflow-hidden">
-    <!-- Header: Resources Summary (Always Visible - Consolidated) -->
-    <div class="flex-none bg-neutral-800 p-3 rounded-lg border border-neutral-700 flex justify-between items-center text-xs">
+  <div class="h-full flex flex-col p-2 gap-2 overflow-hidden bg-black text-xs font-serif leading-relaxed select-none">
+    <!-- Header: Resources Summary (Compact & Glowing) -->
+    <div class="flex-none bg-neutral-900/80 p-2 border-y border-neutral-800 grid grid-cols-4 gap-2 text-center relative">
+        <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neutral-600 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neutral-600 to-transparent"></div>
+        
         <div class="flex flex-col items-center">
-            <span class="text-amber-500">食物</span>
-            <span class="font-mono">{{ Math.floor(resources.food) }}</span>
-            <span class="text-[10px]" :class="netFoodProduction >= 0 ? 'text-green-500' : 'text-red-500'">{{ netFoodProduction >=0?'+':''}}{{netFoodProduction}}/s</span>
+            <span class="text-amber-600 text-[10px] transform scale-90">食物</span>
+            <span class="font-mono text-amber-500">{{ Math.floor(resources.food) }}</span>
+            <span class="text-[8px] font-mono" :class="netFoodProduction >= 0 ? 'text-green-600' : 'text-red-500'">{{ (netFoodProduction >=0?'+':'') + netFoodProduction }}/s</span>
         </div>
         <div class="flex flex-col items-center">
-            <span class="text-green-500">木材</span>
-            <span class="font-mono">{{ Math.floor(resources.wood) }}</span>
-            <span class="text-[10px] text-green-500">+{{ productionRates.wood }}/s</span>
+            <span class="text-green-700 text-[10px] transform scale-90">木材</span>
+            <span class="font-mono text-green-600">{{ Math.floor(resources.wood) }}</span>
+            <span class="text-[8px] text-green-700 font-mono">+{{ productionRates.wood }}/s</span>
         </div>
         <div class="flex flex-col items-center">
-            <span class="text-gray-400">陨铁</span>
-            <span class="font-mono">{{ Math.floor(resources.iron) }}</span>
-            <span class="text-[10px] text-green-500">+{{ productionRates.iron }}/s</span>
+            <span class="text-neutral-500 text-[10px] transform scale-90">陨铁</span>
+            <span class="font-mono text-neutral-400">{{ Math.floor(resources.iron) }}</span>
+            <span class="text-[8px] text-green-700 font-mono">+{{ productionRates.iron }}/s</span>
         </div>
-        <div v-if="abode.spiritGardenLevel > 0" class="flex flex-col items-center">
-            <span class="text-emerald-400">灵草</span>
-            <span class="font-mono">{{ Math.floor(resources.herb || 0) }}</span>
-             <span class="text-[10px] text-green-500">+{{ productionRates.herb }}/s</span>
+        <div class="flex flex-col items-center">
+            <span class="text-emerald-600 text-[10px] transform scale-90">灵草</span>
+            <span class="font-mono text-emerald-500">{{ Math.floor(resources.herb || 0) }}</span>
+             <span class="text-[8px] text-green-700 font-mono">+{{ productionRates.herb }}/s</span>
         </div>
     </div>
 
     <!-- Tabs -->
-    <div class="flex-1 flex flex-col min-h-0 bg-neutral-800 rounded-lg border border-neutral-700 overflow-hidden">
-        <div class="flex border-b border-neutral-700 shrink-0">
+    <div class="flex-1 flex flex-col min-h-0 border border-neutral-800 bg-neutral-900/30 relative">
+        <div class="flex justify-center gap-8 py-2 text-sm border-b border-neutral-800/50 bg-black">
             <button 
                 v-for="tab in ['经营', '建设']" 
                 :key="tab"
                 @click="activeTab = tab"
-                class="flex-1 py-3 text-sm font-bold transition-colors relative"
-                :class="activeTab === tab ? 'text-amber-500 bg-neutral-700/50' : 'text-neutral-500 hover:bg-neutral-700/30'"
+                class="relative px-2 transition-colors"
+                :class="activeTab === tab ? 'text-amber-500 text-glow-gold font-bold' : 'text-neutral-600 hover:text-neutral-400'"
             >
                 {{ tab }}
-                <div v-if="activeTab === tab" class="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500"></div>
+                <span v-if="activeTab === tab" class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-amber-900">▣</span>
             </button>
         </div>
 
         <!-- Content -->
-        <div class="flex-1 overflow-y-auto p-4 scrollbar-hide">
+        <div class="flex-1 overflow-y-auto p-2 scrollbar-hide">
             
             <!-- Management Tab -->
             <div v-if="activeTab === '经营'" class="space-y-4">
                 <!-- Servants Info -->
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-sm font-bold text-neutral-300">仙仆调配</span>
-                    <div class="text-xs">
-                        <span class="text-neutral-500">闲置/总数:</span>
-                        <span class="text-white ml-1">{{ idleServants }} / {{ abode.servants.total }}</span>
-                    </div>
+                <div class="flex justify-between items-center px-1 text-neutral-500">
+                    <span>◆ 仙仆调配</span>
+                    <span class="font-mono text-[10px]">闲置 <span class="text-white">{{ idleServants }}</span> / {{ abode.servants.total }}</span>
                 </div>
 
                 <!-- Assignment Grid -->
-                <div class="grid grid-cols-1 gap-2">
-                    <div class="flex items-center justify-between bg-neutral-900/50 p-3 rounded border border-neutral-800">
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between bg-black p-2 border border-neutral-900 hover:border-neutral-700 transition-colors group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-amber-900/30 flex items-center justify-center text-amber-500 font-bold text-xs">粮</div>
+                            <div class="text-amber-600 font-bold w-4 text-center">粮</div>
                             <div>
-                                <div class="text-xs text-neutral-300">灵田夫 (食物)</div>
-                                <div class="text-[10px] text-neutral-500">当前: {{ abode.servants.food }}</div>
+                                <div class="text-neutral-400 group-hover:text-amber-500 transition-colors">灵田夫</div>
+                                <div class="text-[10px] text-neutral-600">当前: {{ abode.servants.food }}</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button @click="handleAssign('food', -1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">-</button>
-                            <button @click="handleAssign('food', 1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">+</button>
+                        <div class="flex items-center gap-1 font-mono">
+                            <button @click="handleAssign('food', -1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">-</button>
+                            <button @click="handleAssign('food', 1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">+</button>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between bg-neutral-900/50 p-3 rounded border border-neutral-800">
+                    <div class="flex items-center justify-between bg-black p-2 border border-neutral-900 hover:border-neutral-700 transition-colors group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-green-900/30 flex items-center justify-center text-green-500 font-bold text-xs">木</div>
+                            <div class="text-green-600 font-bold w-4 text-center">木</div>
                             <div>
-                                <div class="text-xs text-neutral-300">伐木工 (木材)</div>
-                                <div class="text-[10px] text-neutral-500">当前: {{ abode.servants.wood }}</div>
+                                <div class="text-neutral-400 group-hover:text-green-500 transition-colors">伐木工</div>
+                                <div class="text-[10px] text-neutral-600">当前: {{ abode.servants.wood }}</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button @click="handleAssign('wood', -1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">-</button>
-                            <button @click="handleAssign('wood', 1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">+</button>
+                        <div class="flex items-center gap-1 font-mono">
+                            <button @click="handleAssign('wood', -1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">-</button>
+                            <button @click="handleAssign('wood', 1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">+</button>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between bg-neutral-900/50 p-3 rounded border border-neutral-800">
+                    <div class="flex items-center justify-between bg-black p-2 border border-neutral-900 hover:border-neutral-700 transition-colors group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs">矿</div>
+                            <div class="text-neutral-400 font-bold w-4 text-center">矿</div>
                             <div>
-                                <div class="text-xs text-neutral-300">矿工 (陨铁)</div>
-                                <div class="text-[10px] text-neutral-500">当前: {{ abode.servants.iron }}</div>
+                                <div class="text-neutral-400 group-hover:text-neutral-300 transition-colors">矿工</div>
+                                <div class="text-[10px] text-neutral-600">当前: {{ abode.servants.iron }}</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button @click="handleAssign('iron', -1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">-</button>
-                            <button @click="handleAssign('iron', 1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">+</button>
+                        <div class="flex items-center gap-1 font-mono">
+                            <button @click="handleAssign('iron', -1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">-</button>
+                            <button @click="handleAssign('iron', 1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">+</button>
                         </div>
                     </div>
 
-                    <div v-if="abode.spiritGardenLevel > 0" class="flex items-center justify-between bg-neutral-900/50 p-3 rounded border border-neutral-800">
+                    <div v-if="abode.spiritGardenLevel > 0" class="flex items-center justify-between bg-black p-2 border border-neutral-900 hover:border-neutral-700 transition-colors group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-emerald-900/30 flex items-center justify-center text-emerald-400 font-bold text-xs">药</div>
+                            <div class="text-emerald-500 font-bold w-4 text-center">药</div>
                             <div>
-                                <div class="text-xs text-neutral-300">药童 (灵草)</div>
-                                <div class="text-[10px] text-neutral-500">当前: {{ abode.servants.herb || 0 }}</div>
+                                <div class="text-neutral-400 group-hover:text-emerald-400 transition-colors">药童</div>
+                                <div class="text-[10px] text-neutral-600">当前: {{ abode.servants.herb || 0 }}</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button @click="handleAssign('herb', -1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">-</button>
-                            <button @click="handleAssign('herb', 1)" class="w-8 h-8 flex items-center justify-center bg-neutral-700 rounded hover:bg-neutral-600">+</button>
+                        <div class="flex items-center gap-1 font-mono">
+                            <button @click="handleAssign('herb', -1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">-</button>
+                            <button @click="handleAssign('herb', 1)" class="w-6 h-6 flex items-center justify-center border border-neutral-800 hover:bg-neutral-800 text-neutral-500">+</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-neutral-700 mt-4">
-                     <button @click="openRecruitModal" class="w-full py-3 bg-neutral-700 hover:bg-neutral-600 text-neutral-200 text-sm font-bold rounded border border-neutral-600">
-                        招募流民 (10灵石)
+                <div class="pt-2 mt-4 text-center">
+                     <button @click="openRecruitModal" class="w-full py-2 border border-dashed border-neutral-700 text-neutral-500 hover:text-neutral-300 hover:border-neutral-500 text-xs">
+                        + 招募流民 (10灵石) +
                      </button>
                 </div>
             </div>
 
             <!-- Build Tab -->
-            <div v-if="activeTab === '建设'" class="space-y-4">
+            <div v-if="activeTab === '建设'" class="space-y-3">
                 <!-- Abode Level -->
-                 <div class="bg-neutral-900/50 p-3 rounded border border-neutral-800">
-                    <div class="flex justify-between items-start mb-2">
+                 <div class="bg-black p-3 border border-neutral-800 relative group">
+                    <div class="absolute -left-[1px] -right-[1px] top-0 h-[1px] bg-neutral-800"></div>
+                    <div class="flex justify-between items-start mb-1">
                         <div>
-                            <div class="text-sm font-bold text-blue-500">洞府扩建</div>
-                            <div class="text-xs text-neutral-500">当前规模: Lv.{{ abode.level || 1 }}</div>
+                            <div class="text-sm font-bold text-blue-500 group-hover:text-glow-blue transition-all">洞府扩建</div>
+                            <div class="text-[10px] text-neutral-600 font-mono mt-1">Lv.{{ abode.level || 1 }}</div>
                         </div>
-                        <button @click="handleUpgradeAbode" class="px-3 py-1 bg-blue-900/50 text-blue-300 border border-blue-800 rounded text-xs hover:bg-blue-900">扩建</button>
+                        <button @click="handleUpgradeAbode" class="px-2 py-0.5 border border-blue-900 text-blue-500 hover:bg-blue-900/20 text-xs">扩建</button>
                     </div>
-                     <div class="text-[10px] text-neutral-400">消耗: 木{{ abodeUpgradeCost.wood }} / 铁{{ abodeUpgradeCost.iron }}</div>
+                     <div class="text-[10px] text-neutral-500 font-mono mt-2 pt-2 border-t border-dashed border-neutral-900">
+                        消耗: 木{{ abodeUpgradeCost.wood }} / 铁{{ abodeUpgradeCost.iron }}
+                     </div>
                 </div>
 
                 <!-- Gathering Array -->
-                 <div class="bg-neutral-900/50 p-3 rounded border border-neutral-800">
-                    <div class="flex justify-between items-start mb-2">
+                 <div class="bg-black p-3 border border-neutral-800 relative group">
+                    <div class="flex justify-between items-start mb-1">
                         <div>
-                            <div class="text-sm font-bold text-amber-500">聚灵阵</div>
-                            <div class="text-xs text-neutral-500">等级: {{ abode.gatheringArrayLevel }}</div>
+                            <div class="text-sm font-bold text-amber-600 group-hover:text-glow-gold transition-all">聚灵阵</div>
+                            <div class="text-[10px] text-neutral-600 font-mono mt-1">Lv.{{ abode.gatheringArrayLevel }}</div>
                         </div>
-                        <button @click="handleUpgradeArray" class="px-3 py-1 bg-amber-900/50 text-amber-300 border border-amber-800 rounded text-xs hover:bg-amber-900">升级</button>
+                        <button @click="handleUpgradeArray" class="px-2 py-0.5 border border-amber-900 text-amber-600 hover:bg-amber-900/20 text-xs">升级</button>
                     </div>
-                     <div class="text-[10px] text-neutral-400 mb-1">
-                        效果: 修炼+{{ abode.gatheringArrayLevel }}/s, 回复+{{(abode.gatheringArrayLevel*0.5).toFixed(1)}}%/s
+                     <div class="text-[10px] text-neutral-500 mt-2 mb-1">
+                        修炼+{{ abode.gatheringArrayLevel }}/s, 回复+{{(abode.gatheringArrayLevel*0.5).toFixed(1)}}%/s
                      </div>
-                     <div class="text-[10px] text-neutral-400">消耗: 木{{ upgradeCost.wood }} / 铁{{ upgradeCost.iron }}</div>
+                      <div class="text-[10px] text-neutral-600 font-mono pt-1 border-t border-dashed border-neutral-900">
+                        消耗: 木{{ upgradeCost.wood }} / 铁{{ upgradeCost.iron }}
+                     </div>
                 </div>
 
                  <!-- Spirit Garden -->
-                 <div class="bg-neutral-900/50 p-3 rounded border border-neutral-800">
-                    <div class="flex justify-between items-start mb-2">
+                 <div class="bg-black p-3 border border-neutral-800 relative group">
+                    <div class="flex justify-between items-start mb-1">
                         <div>
-                            <div class="text-sm font-bold text-emerald-500">灵田</div>
-                            <div class="text-xs text-neutral-500">
-                                {{ (!abode.spiritGardenLevel || abode.spiritGardenLevel === 0) ? '未开辟' : `等级: ${abode.spiritGardenLevel}` }}
+                            <div class="text-sm font-bold text-emerald-600 group-hover:text-glow-jade transition-all">灵田</div>
+                            <div class="text-[10px] text-neutral-600 font-mono mt-1">
+                                {{ (!abode.spiritGardenLevel || abode.spiritGardenLevel === 0) ? '未开辟' : `Lv. ${abode.spiritGardenLevel}` }}
                             </div>
                         </div>
-                         <button @click="handleUpgradeSpiritGarden" class="px-3 py-1 bg-emerald-900/50 text-emerald-300 border border-emerald-800 rounded text-xs hover:bg-emerald-900">
+                         <button @click="handleUpgradeSpiritGarden" class="px-2 py-0.5 border border-emerald-900 text-emerald-600 hover:bg-emerald-900/20 text-xs">
                             {{ (!abode.spiritGardenLevel || abode.spiritGardenLevel === 0) ? '开辟' : '升级' }}
                         </button>
                     </div>
-                    <div v-if="!abode.spiritGardenLevel || abode.spiritGardenLevel === 0" class="text-[10px] text-neutral-400 mb-1">
+                    <div v-if="!abode.spiritGardenLevel || abode.spiritGardenLevel === 0" class="text-[10px] text-neutral-500 mb-1">
                         需洞府Lv.2, 允许种植灵草
                     </div>
-                     <div class="text-[10px] text-neutral-400">消耗: 木{{ spiritGardenCost.wood }} / 铁{{ spiritGardenCost.iron }}</div>
+                     <div class="text-[10px] text-neutral-600 font-mono pt-1 border-t border-dashed border-neutral-900">
+                        消耗: 木{{ spiritGardenCost.wood }} / 铁{{ spiritGardenCost.iron }}
+                     </div>
                 </div>
             </div>
 
