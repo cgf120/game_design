@@ -1,4 +1,5 @@
-import { getItem, type Item } from '../constants/items';
+import { getItem } from '../constants/items';
+import type { ItemStats, InventorySlot } from '../models/item';
 
 export interface StatDisplay {
     label: string;
@@ -6,16 +7,51 @@ export interface StatDisplay {
     color: string;
 }
 
-export function getItemStatsList(id: string): StatDisplay[] {
-    const item = getItem(id);
-    if (!item || !item.stats) return [];
+export function getItemStatsList(input: string | InventorySlot): StatDisplay[] {
+    let itemId: string;
+    let gemIds: string[] = [];
+    let instanceStats: ItemStats | undefined;
 
+    if (typeof input === 'string') {
+        itemId = input;
+    } else {
+        itemId = input.itemId;
+        if (input.instanceData) {
+            instanceStats = input.instanceData.stats;
+            gemIds = input.instanceData.gems || [];
+        }
+    }
+
+    const item = getItem(itemId);
+    if (!item) return [];
+
+    // Base usage stats (prefer instance stats if available)
+    const baseStats = instanceStats || item.stats || {};
+
+    // Accumulate total stats
+    const totalStats: ItemStats = { ...baseStats };
+
+    // Add gem stats
+    gemIds.forEach(gemId => {
+        const gem = getItem(gemId);
+        if (gem && gem.stats) {
+            if (gem.stats.atk) totalStats.atk = (totalStats.atk || 0) + gem.stats.atk;
+            if (gem.stats.def) totalStats.def = (totalStats.def || 0) + gem.stats.def;
+            if (gem.stats.hp) totalStats.hp = (totalStats.hp || 0) + gem.stats.hp;
+            if (gem.stats.mp) totalStats.mp = (totalStats.mp || 0) + gem.stats.mp;
+            if (gem.stats.critRate) totalStats.critRate = (totalStats.critRate || 0) + gem.stats.critRate;
+            if (gem.stats.dodgeRate) totalStats.dodgeRate = (totalStats.dodgeRate || 0) + gem.stats.dodgeRate;
+        }
+    });
+
+    // Determine return list if there are any stats
     const list: StatDisplay[] = [];
-    if (item.stats.atk) list.push({ label: '攻击力', value: `+${item.stats.atk}`, color: 'text-amber-500' });
-    if (item.stats.def) list.push({ label: '防御力', value: `+${item.stats.def}`, color: 'text-blue-500' });
-    if (item.stats.hp) list.push({ label: '气血', value: `+${item.stats.hp}`, color: 'text-green-500' });
-    if (item.stats.mp) list.push({ label: '灵力', value: `+${item.stats.mp}`, color: 'text-sky-500' });
-    if (item.stats.critRate) list.push({ label: '暴击率', value: `+${(item.stats.critRate * 100).toFixed(0)}%`, color: 'text-purple-500' });
+    if (totalStats.atk) list.push({ label: '攻击力', value: `+${totalStats.atk}`, color: 'text-amber-500' });
+    if (totalStats.def) list.push({ label: '防御力', value: `+${totalStats.def}`, color: 'text-blue-500' });
+    if (totalStats.hp) list.push({ label: '气血', value: `+${totalStats.hp}`, color: 'text-green-500' });
+    if (totalStats.mp) list.push({ label: '灵力', value: `+${totalStats.mp}`, color: 'text-sky-500' });
+    if (totalStats.critRate) list.push({ label: '暴击率', value: `+${(totalStats.critRate * 100).toFixed(0)}%`, color: 'text-purple-500' });
+    if (totalStats.dodgeRate) list.push({ label: '闪避率', value: `+${(totalStats.dodgeRate * 100).toFixed(0)}%`, color: 'text-white/50' });
 
     return list;
 }

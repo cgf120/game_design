@@ -66,7 +66,7 @@
             <div v-if="activeSlot === 'weapon' && equipment?.weapon" class="bg-black/40 border-x border-b border-neutral-800 p-2 mb-2 text-xs">
                 <div class="text-[10px] text-neutral-400 mb-1 leading-relaxed">{{ getItem(getEquipId(equipment?.weapon)!)?.desc }}</div>
                  <div class="space-y-1 font-mono">
-                    <div v-for="stat in getItemStatsList(getEquipId(equipment?.weapon)!)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
+                    <div v-for="stat in getItemStatsList(equipment?.weapon)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
                         <span class="text-neutral-500">{{ stat.label }}</span>
                         <span :class="stat.color">{{ stat.value }}</span>
                     </div>
@@ -75,7 +75,7 @@
                      <div class="text-[10px] text-neutral-500">孔位:</div>
                      <div class="flex gap-1">
                         <div v-for="n in (getItem(getEquipId(equipment?.weapon)!)?.gemSlots || 0)" :key="n" class="w-4 h-4 bg-black border border-neutral-800 rounded-full flex items-center justify-center">
-                            <span v-if="equipment.weapon.instanceData?.gems?.[n-1]" class="text-[8px]">💎</span>
+                            <XianxiaIcon v-if="equipment.weapon.instanceData?.gems?.[n-1]" :src="getItem(equipment.weapon.instanceData.gems[n-1])?.icon" fallback="💎" size="xs" />
                             <span v-else class="text-neutral-800 text-[8px]">+</span>
                         </div>
                      </div>
@@ -101,7 +101,7 @@
             <div v-if="activeSlot === 'armor' && equipment?.armor" class="bg-black/40 border-x border-b border-neutral-800 p-2 mb-2 text-xs">
                 <div class="text-[10px] text-neutral-400 mb-1 leading-relaxed">{{ getItem(getEquipId(equipment?.armor)!)?.desc }}</div>
                  <div class="space-y-1 font-mono">
-                    <div v-for="stat in getItemStatsList(getEquipId(equipment?.armor)!)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
+                    <div v-for="stat in getItemStatsList(equipment?.armor)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
                         <span class="text-neutral-500">{{ stat.label }}</span>
                         <span :class="stat.color">{{ stat.value }}</span>
                     </div>
@@ -110,7 +110,7 @@
                      <div class="text-[10px] text-neutral-500">孔位:</div>
                      <div class="flex gap-1">
                         <div v-for="n in (getItem(getEquipId(equipment?.armor)!)?.gemSlots || 0)" :key="n" class="w-4 h-4 bg-black border border-neutral-800 rounded-full flex items-center justify-center">
-                            <span v-if="equipment.armor.instanceData?.gems?.[n-1]" class="text-[8px]">💎</span>
+                            <XianxiaIcon v-if="equipment.armor.instanceData?.gems?.[n-1]" :src="getItem(equipment.armor.instanceData.gems[n-1])?.icon" fallback="💎" size="xs" />
                             <span v-else class="text-neutral-800 text-[8px]">+</span>
                         </div>
                      </div>
@@ -136,7 +136,7 @@
              <div v-if="activeSlot === 'accessory' && equipment?.accessory" class="bg-black/40 border-x border-b border-neutral-800 p-2 mb-2 text-xs">
                 <div class="text-[10px] text-neutral-400 mb-1 leading-relaxed">{{ getItem(getEquipId(equipment?.accessory)!)?.desc }}</div>
                  <div class="space-y-1 font-mono">
-                    <div v-for="stat in getItemStatsList(getEquipId(equipment?.accessory)!)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
+                    <div v-for="stat in getItemStatsList(equipment?.accessory)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
                         <span class="text-neutral-500">{{ stat.label }}</span>
                         <span :class="stat.color">{{ stat.value }}</span>
                     </div>
@@ -145,7 +145,7 @@
                      <div class="text-[10px] text-neutral-500">孔位:</div>
                      <div class="flex gap-1">
                         <div v-for="n in (getItem(getEquipId(equipment?.accessory)!)?.gemSlots || 0)" :key="n" class="w-4 h-4 bg-black border border-neutral-800 rounded-full flex items-center justify-center">
-                            <span v-if="equipment.accessory.instanceData?.gems?.[n-1]" class="text-[8px]">💎</span>
+                            <XianxiaIcon v-if="equipment.accessory.instanceData?.gems?.[n-1]" :src="getItem(equipment.accessory.instanceData.gems[n-1])?.icon" fallback="💎" size="xs" />
                             <span v-else class="text-neutral-800 text-[8px]">+</span>
                         </div>
                      </div>

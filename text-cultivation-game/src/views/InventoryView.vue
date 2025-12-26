@@ -75,7 +75,7 @@
                         <!-- Extra Stats Display -->
                         <div class="mt-3 space-y-1 text-xs font-mono">
                             <!-- Helper function result wrapper -->
-                            <div v-for="stat in getItemStatsList(selectedSlot.itemId)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
+                            <div v-for="stat in getItemStatsList(selectedSlot)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
                                 <span class="text-neutral-500">{{ stat.label }}</span>
                                 <span :class="stat.color">{{ stat.value }}</span>
                             </div>
