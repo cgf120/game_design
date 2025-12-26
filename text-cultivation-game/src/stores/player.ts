@@ -90,6 +90,12 @@ export const usePlayerStore = defineStore('player', () => {
         abode: savedPlayer.abode || defaultState.abode
     } : defaultState);
 
+    // Sanity Check: Fix corrupted CritRate if it's abnormally high (e.g. > 200%)
+    if (player.value.stats.critRate && player.value.stats.critRate > 2) {
+        console.warn('Fixed corrupted CritRate:', player.value.stats.critRate);
+        player.value.stats.critRate = 0;
+    }
+
     // Start of Getters
     const currentRealm = computed(() => getRealm(player.value.cultivation.realmId));
 
