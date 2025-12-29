@@ -2,6 +2,8 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { InventorySlot } from '../core/models/item';
 import { ITEMS, getItem } from '../core/constants/items';
+import { getItemQuality, getDecomposeValue } from '../core/utils/item';
+
 import { getSkill } from '../core/constants/skills'; // Static import
 import { usePlayerStore } from './player';
 import { useSkillStore } from './skill';
@@ -32,18 +34,36 @@ export const useInventoryStore = defineStore('inventory', () => {
         // Check if unique item (Equipment with ranges)
         if (item.type === 'equipment' && item.statsRange && !item.stackable) {
             const stats: any = {};
-            // Helper to roll random float/int
-            const roll = (min: number, max: number, isRate: boolean) => {
-                const val = Math.random() * (max - min) + min;
-                return isRate ? parseFloat(val.toFixed(4)) : Math.floor(val);
+            // Helper to roll random stat with weights
+            const rollStat = (min: number, max: number, isRate: boolean) => {
+                // 1. Godly Roll Check (2% Chance) - Breaks the limit
+                const isGodly = Math.random() < 0.02;
+
+                let finalVal: number;
+
+                if (isGodly) {
+                    // Godly: Exceed max by 1% to 15%
+                    const bonusPct = Math.random() * 0.14 + 0.01;
+                    finalVal = max * (1 + bonusPct);
+                } else {
+                    // Normal: Range [min, max]
+                    // Weighted: Closer to max is rarer (Exponential decay probability).
+                    // rolling 0-1, squaring it biases result towards 0.
+                    // result = min + (range) * (roll^2)
+
+                    const roll = Math.pow(Math.random(), 2);
+                    finalVal = min + (max - min) * roll;
+                }
+
+                return isRate ? parseFloat(finalVal.toFixed(4)) : Math.floor(finalVal);
             };
 
-            if (item.statsRange.atk) stats.atk = roll(item.statsRange.atk[0], item.statsRange.atk[1], false);
-            if (item.statsRange.def) stats.def = roll(item.statsRange.def[0], item.statsRange.def[1], false);
-            if (item.statsRange.hp) stats.hp = roll(item.statsRange.hp[0], item.statsRange.hp[1], false);
-            if (item.statsRange.mp) stats.mp = roll(item.statsRange.mp[0], item.statsRange.mp[1], false);
-            if (item.statsRange.critRate) stats.critRate = roll(item.statsRange.critRate[0], item.statsRange.critRate[1], true);
-            if (item.statsRange.dodgeRate) stats.dodgeRate = roll(item.statsRange.dodgeRate[0], item.statsRange.dodgeRate[1], true);
+            if (item.statsRange.atk) stats.atk = rollStat(item.statsRange.atk[0], item.statsRange.atk[1], false);
+            if (item.statsRange.def) stats.def = rollStat(item.statsRange.def[0], item.statsRange.def[1], false);
+            if (item.statsRange.hp) stats.hp = rollStat(item.statsRange.hp[0], item.statsRange.hp[1], false);
+            if (item.statsRange.mp) stats.mp = rollStat(item.statsRange.mp[0], item.statsRange.mp[1], false);
+            if (item.statsRange.critRate) stats.critRate = rollStat(item.statsRange.critRate[0], item.statsRange.critRate[1], true);
+            if (item.statsRange.dodgeRate) stats.dodgeRate = rollStat(item.statsRange.dodgeRate[0], item.statsRange.dodgeRate[1], true);
 
             playerStore.player.inventory.push({
                 itemId,
@@ -75,6 +95,7 @@ export const useInventoryStore = defineStore('inventory', () => {
         if (idx === -1) return false;
 
         const slot = playerStore.player.inventory[idx];
+        if (!slot) return false;
         if (slot.count < count) return false;
 
         slot.count -= count;
@@ -138,14 +159,6 @@ export const useInventoryStore = defineStore('inventory', () => {
                 return { success: false, msg: '无法学习 (已学会或境界不足)' };
             }
         } else if (effect.type === 'restore_hp') {
-            // Note: effect.value is string in type definition, cast to number if needed
-            // But usually defined as number in constants? Let's check logic.
-            // Actually useEffect value is string in model, so might need parsing or distinct field.
-            // Using effectValue for numeric effects usually.
-            // Checking items.ts: manual uses useEffect {type, value}, pills don't have useEffect yet?
-            // Actually pills in items.ts don't have useEffect defined yet, needed for restore.
-            // Assuming restore logic implies numeric value.
-
             const amount = parseInt(effect.value) || 0;
             playerStore.player.stats.hp = Math.min(
                 playerStore.player.stats.maxHp,
@@ -251,6 +264,42 @@ export const useInventoryStore = defineStore('inventory', () => {
         return { success: true, msg: '已卸下宝石' };
     }
 
+    // Batch Decompose
+    function batchDecompose(qualities: string[]): { count: number, totalValue: number } {
+        // qualities is array of labels e.g. ['下品', '中品']
+        let removedCount = 0;
+        let totalValue = 0;
+
+        // Iterate backwards to safely remove
+        for (let i = playerStore.player.inventory.length - 1; i >= 0; i--) {
+            const slot = playerStore.player.inventory[i];
+            if (!slot) continue;
+            const item = getItem(slot.itemId);
+
+            // 1. Must be equipment
+            if (!item || item.type !== 'equipment') continue;
+
+            // 2. Must match quality
+            const q = getItemQuality(slot);
+            if (qualities.includes(q.label)) {
+                // Calculate Value
+                const val = getDecomposeValue(slot);
+                totalValue += val;
+
+                // Remove
+                playerStore.player.inventory.splice(i, 1);
+                removedCount++;
+            }
+        }
+
+        if (removedCount > 0) {
+            playerStore.player.spiritStones += totalValue;
+            playerStore.save();
+        }
+
+        return { count: removedCount, totalValue };
+    }
+
     return {
         inventory,
         getBagItems,
@@ -262,6 +311,7 @@ export const useInventoryStore = defineStore('inventory', () => {
         useItem,
         save,
         socketGemToEquipped,
-        unsocketGemFromEquipped
+        unsocketGemFromEquipped,
+        batchDecompose
     };
 });

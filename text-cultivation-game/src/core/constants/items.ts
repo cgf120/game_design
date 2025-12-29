@@ -1,113 +1,198 @@
 import type { Item } from '../models/item';
 
-export const ITEMS: Record<string, Item> = {
-    // ... existing items ...
-    'spirit_stone': { id: 'spirit_stone', name: '下品灵石', type: 'material', desc: '修仙界的通用货币，蕴含微量灵气。', salePrice: 1, stackable: true },
-    'mat_herb': { id: 'mat_herb', name: '低阶灵草', type: 'material', desc: '炼制丹药的基础材料。', salePrice: 5, stackable: true },
+// Commercial v6.8 Refined Naming & Generation System (Skills Integrated)
 
-    // Equipment (Examples)
-    // Equipment (Fantasy Westward Journey Style)
-    'weapon_youlong': {
-        id: 'weapon_youlong', name: '游龙剑', type: 'equipment', slot: 'weapon', desc: '古代名剑。剑身柔软，可如腰带般束于腰间。',
-        salePrice: 500, stats: { atk: 15 }, stackable: false,
-        statsRange: { atk: [12, 18] }
-    },
-    'weapon_pophe': {
-        id: 'weapon_pophe', name: '破魄', type: 'equipment', slot: 'weapon', desc: '剑身由玄铁铸造，隐隐透出一股寒气，摄人心魄。',
-        salePrice: 2000, stats: { atk: 45, critRate: 0.05 }, stackable: false,
-        statsRange: { atk: [40, 50], critRate: [0.03, 0.07] }
-    },
+const SLOTS = ['weapon', 'armor', 'helm', 'boots', 'necklace', 'belt'] as const;
+const QUALITIES = [
+    { id: 'common', name: '凡品', color: '#fff', mult: 1.0 },
+    { id: 'uncommon', name: '下品', color: '#4caf50', mult: 1.2 },
+    { id: 'rare', name: '中品', color: '#2196f3', mult: 1.5 },
+    { id: 'epic', name: '上品', color: '#9c27b0', mult: 2.0 },
+    { id: 'legend', name: '极品', color: '#ff9800', mult: 3.0 },
+];
 
-    'armor_wucai': {
-        id: 'armor_wucai', name: '五彩裙', type: 'equipment', slot: 'armor', desc: '用五彩丝线织成的裙子，色彩绚丽。',
-        salePrice: 500, stats: { def: 10, hp: 50 }, stackable: false,
-        statsRange: { def: [8, 12], hp: [40, 60] }
-    },
-    'armor_skull': {
-        id: 'armor_skull', name: '骷髅战甲', type: 'equipment', slot: 'armor', desc: '魔界流传出的宝甲，以上古魔兽骨骼打造。',
-        salePrice: 2000, stats: { def: 30, hp: 200 }, stackable: false,
-        statsRange: { def: [25, 35], hp: [180, 220] }
-    },
+const PREFIX_ATTR = ['寒冰', '烈火', '青木', '庚金', '厚土', '疾风', '紫电', '幽冥', '光明', '混沌'];
+const PREFIX_BEAST = ['青龙', '白虎', '朱雀', '玄武', '麒麟', '饕餮', '穷奇', '鲲鹏', '真龙', '天凤'];
+const MATERIAL_LOW = ['凡铁', '精钢', '赤铜', '寒铁', '百炼钢'];
+const MATERIAL_MID = ['玄铁', '秘银', '精金', '乌金', '星辰砂', '雷击木', '万年冰', '赤焰石'];
+const MATERIAL_HIGH = ['天外陨铁', '太乙精金', '混沌原石', '补天石', '世界树枝', '九天息壤', '鸿蒙紫气', '虚空结晶'];
 
-    'accessory_moon': {
-        id: 'accessory_moon', name: '月光', type: 'equipment', slot: 'accessory', desc: '吸收了月之精华的项链，佩戴者心静如水。',
-        salePrice: 500, stats: { mp: 50, atk: 5 }, stackable: false,
-        statsRange: { mp: [40, 60], atk: [3, 7] }
-    },
-    'accessory_rainbow': {
-        id: 'accessory_rainbow', name: '七彩玲珑石', type: 'equipment', slot: 'accessory', desc: '女娲补天遗留下的七彩神石，拥有神秘的力量。',
-        salePrice: 2000, stats: { mp: 150, atk: 15, hp: 100 }, stackable: false,
-        statsRange: { mp: [130, 170], atk: [12, 18], hp: [80, 120] }
-    },
-
-    // Skill Manuals
-    'manual_sweep': { id: 'manual_sweep', name: '《横扫千军》残页', type: 'consumable', desc: '记载着大唐官府的入门绝技。使用后学习【横扫千军】。', salePrice: 100, useEffect: { type: 'learn_skill', value: 'skill_sweep' }, stackable: true, icon: 'icon_skills' },
-    'manual_dragon_storm': { id: 'manual_dragon_storm', name: '《龙卷雨击》真解', type: 'consumable', desc: '东海龙宫的不传之秘。使用后学习【龙卷雨击】。', salePrice: 500, useEffect: { type: 'learn_skill', value: 'skill_dragon_storm' }, stackable: true, icon: 'icon_skills' },
-    'manual_meditation_heal': { id: 'manual_meditation_heal', name: '《气疗术》', type: 'consumable', desc: '基础的疗伤法门。使用后学习【气疗术】。', salePrice: 50, useEffect: { type: 'learn_skill', value: 'skill_meditation_heal' }, stackable: true, icon: 'icon_skills' },
-
-    // Elixirs
-    'pill_foundation': { id: 'pill_foundation', name: '筑基丹', type: 'consumable', desc: '突破筑基期的必备丹药，增加突破成功率。', salePrice: 1000, stackable: true, breakthroughBonus: 0.2 },
-    'pill_gold_core': { id: 'pill_gold_core', name: '金元丹', type: 'consumable', desc: '凝结金丹的辅助丹药，提升结丹概率。', salePrice: 5000, stackable: true, breakthroughBonus: 0.15 },
-    'pill_nascent': { id: 'pill_nascent', name: '凝婴丹', type: 'consumable', desc: '突破元婴期的稀世丹药。', salePrice: 20000, stackable: true, breakthroughBonus: 0.1 },
-    'pill_spirit': { id: 'pill_spirit', name: '化神丹', type: 'consumable', desc: '感悟天地规则，助你化神。', salePrice: 100000, stackable: true, breakthroughBonus: 0.05 },
-
-    // --- FWJ Gems ---
-    'gem_sun': { id: 'gem_sun', name: '太阳石', type: 'material', desc: '至阳之石，镶嵌在武器上可提升攻击力。', salePrice: 1000, stackable: true, stats: { atk: 8 }, icon: 'ui_stat_atk' },
-    'gem_moon': { id: 'gem_moon', name: '月亮石', type: 'material', desc: '至阴之石，镶嵌在防具上可提升防御力。', salePrice: 1000, stackable: true, stats: { def: 12 }, icon: 'ui_stat_def' },
-    'gem_light': { id: 'gem_light', name: '光芒石', type: 'material', desc: '光芒四射，镶嵌在防具/饰品上可提升气血。', salePrice: 1000, stackable: true, stats: { hp: 40 }, icon: 'ui_stat_hp' },
-    'gem_black': { id: 'gem_black', name: '黑宝石', type: 'material', desc: '神秘的黑宝石，镶嵌在饰品上可提升速度（闪避）。', salePrice: 1000, stackable: true, stats: { critRate: 0.01 }, icon: 'ui_stat_mp' }, // Using crit/speed loosely
-
-    // --- FWJ High Tier Equipment ---
-    // Lv 60
-    'weapon_qinggang': {
-        id: 'weapon_qinggang', name: '青刚剑', type: 'equipment', slot: 'weapon', desc: '百炼精钢打造，削铁如泥。',
-        salePrice: 5000, stats: { atk: 180 }, stackable: false, gemSlots: 3,
-        statsRange: { atk: [170, 190] }
-    },
-    'armor_night': {
-        id: 'armor_night', name: '夜魔披风', type: 'equipment', slot: 'armor', desc: '来自魔界的披风，隐匿气息。',
-        salePrice: 5000, stats: { def: 55, hp: 300 }, stackable: false, gemSlots: 3,
-        statsRange: { def: [50, 60], hp: [280, 320] }
-    },
-    'accessory_flower': {
-        id: 'accessory_flower', name: '花雨', type: 'equipment', slot: 'accessory', desc: '花瓣凝聚而成的项链，香气袭人。',
-        salePrice: 5000, stats: { mp: 200, critRate: 0.02 }, stackable: false, gemSlots: 3,
-        statsRange: { mp: [180, 220], critRate: [0.01, 0.03] }
-    },
-
-    // Lv 80
-    'weapon_beidou': {
-        id: 'weapon_beidou', name: '北斗七星剑', type: 'equipment', slot: 'weapon', desc: '剑身镶嵌七星，引动星辰之力。',
-        salePrice: 20000, stats: { atk: 320, critRate: 0.05 }, stackable: false, gemSlots: 4,
-        statsRange: { atk: [300, 340], critRate: [0.04, 0.06] }
-    },
-    'armor_dragon': {
-        id: 'armor_dragon', name: '龙骨甲', type: 'equipment', slot: 'armor', desc: '上古龙骨打磨而成的战甲。',
-        salePrice: 20000, stats: { def: 110, hp: 800 }, stackable: false, gemSlots: 4,
-        statsRange: { def: [100, 120], hp: [750, 850] }
-    },
-    'accessory_phoenix': {
-        id: 'accessory_phoenix', name: '凤翅项链', type: 'equipment', slot: 'accessory', desc: '凤凰羽翼化作的项链，涅槃重生。',
-        salePrice: 20000, stats: { mp: 500, hp: 200, atk: 20 }, stackable: false, gemSlots: 4,
-        statsRange: { mp: [450, 550], hp: [180, 220], atk: [15, 25] }
-    },
-
-    // Lv 100
-    'weapon_yitian': {
-        id: 'weapon_yitian', name: '倚天剑', type: 'equipment', slot: 'weapon', desc: '安得倚天抽宝剑，将汝裁为三截！',
-        salePrice: 100000, stats: { atk: 600, critRate: 0.1 }, stackable: false, gemSlots: 5,
-        statsRange: { atk: [550, 650], critRate: [0.08, 0.12] }
-    },
-    'armor_golden': {
-        id: 'armor_golden', name: '金蚕衣', type: 'equipment', slot: 'armor', desc: '金蚕丝混以天蚕丝织就，水火不侵。',
-        salePrice: 100000, stats: { def: 250, hp: 2000 }, stackable: false, gemSlots: 5,
-        statsRange: { def: [220, 280], hp: [1800, 2200] }
-    },
-    'accessory_soul': {
-        id: 'accessory_soul', name: '万里追魂', type: 'equipment', slot: 'accessory', desc: '追魂夺命，无处可逃。',
-        salePrice: 100000, stats: { mp: 1000, atk: 50, critRate: 0.05 }, stackable: false, gemSlots: 5,
-        statsRange: { mp: [900, 1100], atk: [40, 60], critRate: [0.04, 0.06] }
-    },
+const SLOT_NAMES: Record<string, string[]> = {
+    'weapon': ['剑', '刀', '枪', '戟', '尺', '印', '幡', '鼎'],
+    'armor': ['甲', '衣', '袍', '铠', '纱', '宝衣'],
+    'helm': ['冠', '盔', '巾', '发簪', '面具'],
+    'boots': ['靴', '履', '鞋', '步云履', '摘星靴'],
+    'necklace': ['链', '佩', '珠', '护符', '璎珞'],
+    'belt': ['带', '腰带', '束带', '如意扣', '混天绫'],
 };
 
+// Skill Pools - IDs must match skills.ts
+const TEJI_POOL = ['tj_shatter', 'tj_weakness', 'tj_iq', 'tj_mercy', 'tj_cleanse'];
+const TEXIAO_POOL = ['tx_rage', 'tx_god_bless'];
+
+// Realm config
+const REALM_CONFIG = [
+    { id: 1, name: '练气', mat: MATERIAL_LOW },
+    { id: 2, name: '筑基', mat: MATERIAL_LOW },
+    { id: 3, name: '金丹', mat: MATERIAL_MID },
+    { id: 4, name: '元婴', mat: MATERIAL_MID },
+    { id: 5, name: '化神', mat: MATERIAL_MID },
+    { id: 6, name: '炼虚', mat: MATERIAL_HIGH },
+    { id: 7, name: '出窍', mat: MATERIAL_HIGH },
+    { id: 8, name: '分神', mat: MATERIAL_HIGH },
+    { id: 9, name: '合体', mat: MATERIAL_HIGH },
+    { id: 10, name: '大乘', mat: MATERIAL_HIGH },
+    { id: 11, name: '渡劫', mat: MATERIAL_HIGH },
+    { id: 12, name: '散仙', mat: MATERIAL_HIGH },
+    { id: 13, name: '真仙', mat: MATERIAL_HIGH },
+    { id: 14, name: '玄仙', mat: MATERIAL_HIGH },
+    { id: 15, name: '金仙', mat: MATERIAL_HIGH },
+    { id: 16, name: '准圣', mat: MATERIAL_HIGH },
+    { id: 17, name: '圣人', mat: MATERIAL_HIGH },
+];
+
+const BASE_STATS: Record<string, number> = { atk: 50, def: 20, hp: 200, mp: 100, spd: 10, critRate: 0.01, dodgeRate: 0.01 };
+const STAT_GROWTH = 3.5;
+
+function getName(realmId: number, slot: string, qualityId: string): string {
+    const rConf = REALM_CONFIG[realmId - 1] || REALM_CONFIG[REALM_CONFIG.length - 1];
+    const mats = rConf.mat;
+
+    // Deterministic Pick
+    const mat = mats[(realmId + slot.length) % mats.length];
+    const type = SLOT_NAMES[slot][(realmId * 2) % SLOT_NAMES[slot].length];
+
+    if (qualityId === 'common' || qualityId === 'uncommon') {
+        return `${mat}${type}`;
+    } else if (qualityId === 'rare' || qualityId === 'epic') {
+        const attr = PREFIX_ATTR[(realmId + slot.length) % PREFIX_ATTR.length];
+        return `${attr}${mat}${type}`;
+    } else {
+        const beast = PREFIX_BEAST[(realmId + slot.length) % PREFIX_BEAST.length];
+        return `${beast}${mat}${type}`;
+    }
+}
+
+const generateItems = (): Record<string, Item> => {
+    const items: Record<string, Item> = {};
+
+    items['spirit_stone'] = { id: 'spirit_stone', name: '灵石', type: 'material', desc: '通用货币', salePrice: 1, stackable: true };
+
+    // Gathering Materials
+    const MATS = [
+        { id: 'mat_herb', name: '药草', desc: '普通的草药。', price: 5 },
+        { id: 'mat_wood', name: '木材', desc: '建筑材料。', price: 5 },
+        { id: 'mat_iron', name: '铁矿', desc: '锻造材料。', price: 10 },
+        { id: 'mat_copper', name: '铜矿', desc: '锻造材料。', price: 10 },
+        { id: 'mat_sea_shell', name: '海贝', desc: '海边的贝壳。', price: 5 },
+        { id: 'mat_essence', name: '妖气结晶', desc: '妖兽掉落的结晶。', price: 50 },
+        { id: 'mat_bone', name: '兽骨', desc: '炼器材料。', price: 20 },
+        { id: 'mat_silk', name: '蛛丝', desc: '编织材料。', price: 30 },
+        { id: 'mat_crystal', name: '水晶', desc: '蕴含灵气。', price: 100 },
+        { id: 'mat_stone', name: '矿石', desc: '普通的矿石。', price: 15 },
+        { id: 'mat_meteor', name: '陨铁', desc: '天外之物。', price: 500 },
+    ];
+
+    MATS.forEach(m => {
+        items[m.id] = { id: m.id, name: m.name, type: 'material', desc: m.desc, salePrice: m.price, stackable: true };
+    });
+
+    REALM_CONFIG.forEach((realm, rIdx) => {
+        const realmMult = Math.pow(STAT_GROWTH, rIdx);
+
+        SLOTS.forEach(slot => {
+            const tiers = ['common', 'rare', 'legend'];
+
+            tiers.forEach(tierKey => {
+                const quality = QUALITIES.find(q => q.id === tierKey)!;
+                const itemId = `eq_${realm.id}_${slot}_${tierKey}`;
+
+                const fancyName = getName(realm.id, slot, tierKey);
+
+                const slotCfg = {
+                    'weapon': { main: 'atk', sub: 'critRate' },
+                    'armor': { main: 'def', sub: 'hp' },
+                    'helm': { main: 'hp', sub: 'def' },
+                    'boots': { main: 'spd', sub: 'dodgeRate' },  // Boots provide Speed
+                    'necklace': { main: 'mp', sub: 'atk' },
+                    'belt': { main: 'hp', sub: 'def' },
+                }[slot];
+
+                // Stats Range Logic
+                // Guobiao (Standard) = Min = Base Value
+                // Max = Guobiao / 0.75 (Implies Guobiao is 75% of Max)
+                const statsRange: any = {};
+
+                // Helper to set range
+                const setRange = (key: string, baseVal: number, isRate: boolean) => {
+                    if (baseVal <= 0) return;
+
+                    if (isRate) {
+                        const min = parseFloat(baseVal.toFixed(4));
+                        const max = parseFloat((baseVal / 0.75).toFixed(4));
+                        statsRange[key] = [min, max];
+                    } else {
+                        // Integer types
+                        const min = Math.max(1, Math.floor(baseVal));
+                        const max = Math.floor(baseVal / 0.75);
+                        statsRange[key] = [min, max];
+                    }
+                };
+
+                const mainVal = (BASE_STATS[slotCfg.main] || 0) * realmMult * quality.mult;
+
+                const isMainRate = slotCfg.main.includes('Rate');
+                const mainBase = isMainRate ? Math.min(0.3, mainVal) : Math.floor(mainVal);
+                setRange(slotCfg.main, mainBase, isMainRate);
+
+                if (slotCfg.sub) {
+                    const subVal = (BASE_STATS[slotCfg.sub] || 0) * realmMult * quality.mult * 0.5;
+                    const isSubRate = slotCfg.sub.includes('Rate');
+                    const subBase = isSubRate ? Math.min(0.15, subVal) : Math.floor(subVal);
+                    setRange(slotCfg.sub, subBase, isSubRate);
+                }
+
+                // Skill Logic (Seed based? Or just static per ID?)
+                // Since this generates the Database Definitions, we can't be too random per instance *here* 
+                // BUT we can assign a "Potential" or just define specific Legend items that ALWAYS have traits.
+                // Or, more likely, valid Database Items shouldn't have specific skills unless they are Uniques.
+                // However, for the sake of the requested task, let's say "Legend" items defined here have a chance to come with a skill pre-defined in the DB entry
+                // OR we leave `skills` empty in DB and let the `Inventory` logic roll it.
+                // The prompt asks for "Equipment Skills", implying they exist.
+                // Let's attach skills to specific "Legend" entries to ensure they appear in game for now properly.
+
+                const itemSkills: string[] = [];
+                if (tierKey === 'legend') {
+                    // 20% of legends have a skill in this DB generation (representing "Fixed" artifacts? mainly for testing reliability)
+                    if (slot === 'belt') {
+                        // Belts often have Rage
+                        itemSkills.push('tx_rage');
+                    } else if (slot === 'necklace' || slot === 'helm') {
+                        // High chance for big teji
+                        itemSkills.push(TEJI_POOL[rIdx % TEJI_POOL.length]);
+                    } else if (Math.random() > 0.5) {
+                        itemSkills.push(TEJI_POOL[(rIdx + 1) % TEJI_POOL.length]);
+                    }
+                }
+
+                items[itemId] = {
+                    id: itemId,
+                    name: fancyName,
+                    type: 'equipment',
+                    slot: slot,
+                    desc: `流传于${realm.name}修士之间的${quality.name}法宝。`,
+                    salePrice: Math.floor(100 * realmMult * quality.mult),
+                    stackable: false,
+                    statsRange: statsRange,
+                    gemSlots: Math.floor(rIdx / 4) + 1,
+                    skills: itemSkills.length > 0 ? itemSkills : undefined // Attach skill to DB entry
+                };
+            });
+        });
+    });
+
+    return items;
+};
+
+export const ITEMS = generateItems();
 export const getItem = (id: string) => ITEMS[id];

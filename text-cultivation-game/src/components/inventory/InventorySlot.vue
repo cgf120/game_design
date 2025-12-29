@@ -1,44 +1,60 @@
 <template>
   <div 
-    class="relative aspect-square cursor-pointer group select-none"
+    class="relative aspect-square cursor-pointer group select-none bg-black overflow-hidden"
     @click="$emit('click')"
   >
-    <!-- Rarity Border/Background -->
-    <!-- Using a dynamic class or style based on rarity. 
-         For now, default ink/border style, but preparing for rarity. 
-    -->
+    <!-- 1. Background Image (Custom UI) -->
+    <img 
+        :src="getBgPath()"
+        class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+        alt="bg"
+    />
+    
+    <!-- Quality Color Overlay (Subtle tint based on quality) -->
     <div 
-        class="absolute inset-0 bg-neutral-900 border transition-all duration-200"
-        :class="[
-            selected ? 'border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'border-neutral-800 hover:border-neutral-600',
-            rarityClass
-        ]"
+        class="absolute inset-0 mix-blend-overlay opacity-50"
+        :class="qualityInfo?.bg || 'bg-neutral-900'"
     ></div>
 
-    <!-- Inner content -->
-    <div class="absolute inset-1 bg-black/50 flex flex-col items-center justify-center p-1">
+    <!-- 2. Frame Overlay (Background/Border) -->
+    <img 
+        v-if="qualityInfo?.frame"
+        :src="getFramePath(qualityInfo.frame)"
+        class="absolute inset-0 w-full h-full z-10 pointer-events-none"
+        :style="qualityInfo?.frameStyle"
+        alt="frame"
+    />
+    <div v-else class="absolute inset-0 border border-neutral-800 z-10 pointer-events-none"></div>
+
+    <!-- 3. Inner Content (Icon) -->
+    <div class="absolute inset-0 flex flex-col items-center justify-center p-1 z-20">
         <XianxiaIcon 
             v-if="item"
             :src="getIcon(item)" 
             fallback="📦" 
             size="md" 
-            class="filter drop-shadow-sm group-hover:scale-110 transition-transform duration-200"
+            class="filter drop-shadow-md group-hover:scale-110 transition-transform duration-200"
         />
         
         <!-- Empty Slot Placeholder -->
         <span v-else class="text-neutral-800 text-2xl font-thin">+</span>
     </div>
 
-    <!-- Count -->
-    <div v-if="count > 1" class="absolute bottom-1 right-1 z-10 text-[10px] text-neutral-400 font-mono bg-black/70 px-1 rounded-sm">
+    <!-- 4. Count -->
+    <div v-if="count > 1" class="absolute top-1 right-1 z-30 text-[10px] text-neutral-300 font-mono bg-black/60 px-1 rounded-sm backdrop-blur-sm border border-white/10">
         {{ count }}
     </div>
 
-    <!-- Name Label -->
-    <div v-if="item" class="absolute bottom-0 left-0 right-0 py-0.5 bg-neutral-950/80 text-center">
-        <span class="text-[9px] text-neutral-300 transform scale-90 inline-block font-sans whitespace-nowrap overflow-hidden text-ellipsis px-1 max-w-full">
-            {{ item.name }}
-        </span>
+    <!-- 5. Name Label -->
+    <div v-if="item" class="absolute bottom-1 left-1 right-1 py-0.5 text-center z-30 pointer-events-none">
+        <div class="bg-black/30 backdrop-blur-sm rounded-sm border border-white/5">
+             <span 
+                class="text-[9px] transform scale-90 inline-block font-sans whitespace-nowrap overflow-hidden text-ellipsis px-1 max-w-full"
+                :class="qualityInfo?.color || 'text-neutral-300'"
+            >
+                {{ item.name }}
+            </span>
+        </div>
     </div>
     
   </div>
@@ -49,6 +65,8 @@ import { computed } from 'vue';
 import type { InventorySlot } from '../../core/models/item';
 import { getItem } from '../../core/constants/items';
 import XianxiaIcon from '../shared/XianxiaIcon.vue';
+
+import { getItemQuality } from '../../core/utils/item';
 
 const props = defineProps<{
     slotData?: InventorySlot | null; // Can be null for empty visual slot
@@ -64,13 +82,12 @@ const item = computed(() => {
 
 const count = computed(() => props.slotData?.count || 0);
 
-const rarityClass = computed(() => {
-    if (!item.value) return '';
-    // Mock rarity mapping
-    // switch(item.value.rarity) ...
-    // For now return neutral or empty
-    return ''; 
+const qualityInfo = computed(() => {
+    if (!props.slotData) return null;
+    return getItemQuality(props.slotData);
 });
+
+
 
 function getIcon(itemDef: any) {
     if (!itemDef) return 'icon_bag';
@@ -78,6 +95,8 @@ function getIcon(itemDef: any) {
 
     // Handle Equipment
     if (itemDef.type === 'equipment' && itemDef.slot) {
+        if (['helm', 'boots'].includes(itemDef.slot)) return 'icon_type_armor';
+        if (['necklace', 'belt'].includes(itemDef.slot)) return 'icon_type_accessory';
         return `icon_type_${itemDef.slot}`;
     }
 
@@ -87,5 +106,16 @@ function getIcon(itemDef: any) {
     }
 
     return 'icon_bag';
+}
+
+
+function getFramePath(frameName: string) {
+    if (!frameName) return '';
+    return new URL(`../../assets/ui/${frameName}.png`, import.meta.url).href;
+}
+
+const bgPath = new URL('../../assets/ui/ui_slot_bg.png', import.meta.url).href;
+function getBgPath() {
+    return bgPath;
 }
 </script>

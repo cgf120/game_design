@@ -1,10 +1,10 @@
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { usePlayerStore } from '../stores/player';
 import { useInventoryStore } from '../stores/inventory';
 import { MAPS } from '../core/constants/maps';
 import type { GameMap, Enemy } from '../core/models/combat';
 import { useSectStore } from '../stores/sect'; // Import SectStore
-import { useSkillStore } from '../stores/skill'; // Import SkillStore
+
 import { SKILLS } from '../core/constants/skills'; // Import SKILLS constant
 import { getItem } from '../core/constants/items'; // Import getItem
 
@@ -79,6 +79,12 @@ export function useCombat() {
         const attackRound = () => {
             if (!currentEnemy.value) return;
 
+            // Safety check: if enemy is already dead (negative HP), trigger victory immediately
+            if (currentEnemy.value.stats.hp <= 0) {
+                handleVictory(currentEnemy.value);
+                return;
+            }
+
             // Use effective stats for calculation (Atk, Def, Speed, etc.)
             const playerStats = playerStore.effectiveStats;
             // Use mutable stats for HP/MP updates
@@ -135,8 +141,8 @@ export function useCombat() {
                         playerMutableStats.hp = Math.min(playerStats.maxHp, playerMutableStats.hp + healAmount);
                         log(`[神通] 你施展了【${skill.name}】，恢复了 ${healAmount} 点气血！`);
                     }
-                    else if (skill.effect.type === 'buff_def') {
-                        log(`[神通] 你施展了【${skill.name}】，护体金光乍现！(Buff效果暂未实装)`);
+                    else if (skill.effect.type === 'buff_stats') {
+                        log(`[神通] 你施展了【${skill.name}】，状态提升！(Buff效果暂未实装)`);
                     }
 
                     break; // Only one skill per turn
@@ -197,7 +203,7 @@ export function useCombat() {
 
             // Simple template generator
             const names = ['黑衣人', '偷药贼', '流窜妖兽'];
-            const name = names[Math.floor(Math.random() * names.length)];
+            const name = names[Math.floor(Math.random() * names.length)] || '敌方修士';
 
             currentEnemy.value = {
                 id: 'sect_intruder', // FIXED ID for task
@@ -211,9 +217,10 @@ export function useCombat() {
                     def: level * 2
                 },
                 expReward: level * 8,
-                drops: []
+                drops: [],
+                skills: []
             };
-            log(`[遭遇] 巡逻中发现了 ${currentEnemy.value.name}！(Lv.${currentEnemy.value.level})`);
+            log(`[遭遇] 巡逻中发现了 ${currentEnemy.value?.name}！(Lv.${currentEnemy.value?.level})`);
             return;
         }
 
@@ -227,64 +234,58 @@ export function useCombat() {
     };
 
     const handleVictory = (enemy: Enemy) => {
-        log(`[胜利] 击败了 ${enemy.name}！获得 ${enemy.expReward} 修为。`);
-        playerStore.addExp(enemy.expReward);
+        try {
+            log(`[胜利] 击败了 ${enemy.name}！获得 ${enemy.expReward} 修为。`);
+            playerStore.addExp(enemy.expReward);
 
-        // Restore 10% HP/MP
-        // Use effective stats directly
-        const pStats = playerStore.effectiveStats; // Max values
-        const pMutable = playerStore.player.stats; // Current values used for writing
+            // Restore 10% HP/MP
+            // Use effective stats directly
+            const pStats = playerStore.effectiveStats; // Max values
+            const pMutable = playerStore.player.stats; // Current values used for writing
 
-        const hpRec = Math.max(1, Math.floor(pStats.maxHp * 0.1));
-        const mpRec = Math.max(1, Math.floor(pStats.maxMp * 0.1));
+            const hpRec = Math.max(1, Math.floor(pStats.maxHp * 0.1));
+            const mpRec = Math.max(1, Math.floor(pStats.maxMp * 0.1));
 
-        pMutable.hp = Math.min(pStats.maxHp, pMutable.hp + hpRec);
-        pMutable.mp = Math.min(pStats.maxMp, pMutable.mp + mpRec);
-        log(`[战胜回气] 气血恢复 ${hpRec}，灵力恢复 ${mpRec}。`);
+            pMutable.hp = Math.min(pStats.maxHp, pMutable.hp + hpRec);
+            pMutable.mp = Math.min(pStats.maxMp, pMutable.mp + mpRec);
+            log(`[战胜回气] 气血恢复 ${hpRec}，灵力恢复 ${mpRec}。`);
 
-        // Update Sect Task Progress
-        const sectStore = useSectStore();
-        sectStore.updateActiveTaskProgress(enemy.id);
+            // Update Sect Task Progress
+            const sectStore = useSectStore();
+            sectStore.updateActiveTaskProgress(enemy.id);
 
-        // Drop Logic (Configurable)
-        if (enemy.drops && enemy.drops.length > 0) {
-            const invStore = useInventoryStore();
-            for (const drop of enemy.drops) {
-                if (Math.random() < drop.chance) {
-                    // Determine amount (min-max)
-                    const amount = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
+            // Drop Logic (Combined Map + Enemy Drops)
+            const allDrops: any[] = [];
+            if (currentMap.value && currentMap.value.drops) {
+                allDrops.push(...currentMap.value.drops);
+            }
+            if (enemy.drops) {
+                allDrops.push(...enemy.drops);
+            }
 
-                    const item = invStore.getItem(drop.itemId); // Helper or access ITEMS via store?
-                    // store usually has internal access or we use constants. 
-                    // Let's assume addItem handles ID. To get name for log, we might need item data.
-                    // InventoryStore might not expose getItem directly to public? 
-                    // Actually invStore.addItem returns boolean. 
-                    // I'll check if I need to look up item name.
-                    // Ideally addItem returns item info or I import getItem from constants.
+            if (allDrops.length > 0) {
+                const invStore = useInventoryStore();
+                for (const drop of allDrops) {
+                    if (Math.random() < drop.chance) {
+                        // Determine amount (min-max)
+                        const amount = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
 
-                    if (invStore.addItem(drop.itemId, amount)) {
-                        const itemInfo = getItem(drop.itemId);
-                        const name = itemInfo ? itemInfo.name : drop.itemId;
-                        log(`[战利品] 获得了 ${name} x${amount}`);
+                        // Fix: Use imported getItem, inventory store does not expose getItem
+                        const item = getItem(drop.itemId);
+
+                        if (invStore.addItem(drop.itemId, amount)) {
+                            const name = item ? item.name : drop.itemId;
+                            log(`[战利品] 获得了 ${name} x${amount}`);
+                        }
                     }
                 }
             }
+        } catch (error) {
+            console.error('Error in handleVictory:', error);
+            log(`[系统] 战斗结算发生异常，请联系管理员。`);
+        } finally {
+            currentEnemy.value = null;
         }
-
-        currentEnemy.value = null;
-
-        // Full heal after battle as requested? 
-        // User asked for "Victory Restore" usually means partial. 
-        // But logic had: playerStore.player.stats.hp = playerStore.player.stats.maxHp; at the end
-        // If user wants FULL heal, use maxHp.
-        // Let's stick to the 10% logic above unless strictly full heal is required.
-        // Wait, line 275 in original was `playerStore.player.stats.hp = playerStore.player.stats.maxHp;`
-        // I should probably keep that if it was intentional, OR remove it if the 10% was the intended design.
-        // Given earlier conversation "10% HP/MP restoration upon winning", I will remove the full heal line which seemed like a debug leftover.
-        // Actually, let's keep it safe: The user's log shows "气血恢复 100", followed by nothing else, implying 10% was applied.
-        // I'll leave the 10% logic and remove the accidental full heal at the end if it contradicts design.
-        // Design doc says: "Combat Restoration: 10% HP/MP restoration upon winning."
-        // So I will REMOVE the full heal at the bottom.
     };
 
     const handleDefeat = () => {

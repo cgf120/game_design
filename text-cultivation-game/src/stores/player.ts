@@ -87,7 +87,9 @@ export const usePlayerStore = defineStore('player', () => {
         spiritRoot: savedPlayer.spiritRoot || defaultState.spiritRoot,
         sect: savedPlayer.sect,
         resources: savedPlayer.resources || defaultState.resources,
-        abode: savedPlayer.abode || defaultState.abode
+        abode: savedPlayer.abode || defaultState.abode,
+        // Sanitize Inventory: Remove legacy strings or invalid entries
+        inventory: (savedPlayer.inventory || []).filter((i: any) => typeof i === 'object' && i !== null && i.itemId)
     } : defaultState);
 
     // Sanity Check: Fix corrupted CritRate if it's abnormally high (e.g. > 200%)

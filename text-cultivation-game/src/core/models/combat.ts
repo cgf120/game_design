@@ -18,6 +18,7 @@ export interface Enemy {
     };
     expReward: number;
     drops: DropItem[];
+    skills: string[]; // List of Skill IDs
 }
 
 export interface GameMap {
@@ -27,5 +28,6 @@ export interface GameMap {
     reqRealmId: number; // Minimum realm to enter
     enemies: Enemy[]; // Possible enemies in this map
     category?: string; // Optional grouping
-    isHidden?: boolean; // If true, only shown when condition met (e.g. active task)
+    isHidden?: boolean; // If true, only show when active
+    drops?: DropItem[]; // Gathering / Global drops
 }

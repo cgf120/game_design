@@ -1,57 +1,133 @@
 export interface Realm {
     id: number;
     name: string;
-    expReq: number; // Experience required to reach the NEXT level (or break through)
+    expReq: number;
     atkBonus: number;
     hpBonus: number;
     defBonus: number;
     mpBonus: number;
-    // Breakthrough Config
+    critRateBonus: number;
+    dodgeRateBonus: number;
     breakthroughReq?: {
-        probability: number; // 0-1
-        itemId?: string; // Required item to attempt (or significantly boost chance?)
-        failPenaltyExp?: number; // Exp lost on faillure
+        probability: number;
+        itemId?: string;
+        failPenaltyExp?: number;
     };
 }
 
-export const REALMS: Realm[] = [
-    // 1. 练气期 (Qi Condensation) - 10 Layers
-    // Base: 50/10/500/70 as requested
-    { id: 1, name: '练气一层', expReq: 100, atkBonus: 50, hpBonus: 500, defBonus: 10, mpBonus: 70, breakthroughReq: { probability: 1.0 } },
-    { id: 2, name: '练气二层', expReq: 200, atkBonus: 60, hpBonus: 600, defBonus: 12, mpBonus: 90, breakthroughReq: { probability: 1.0 } },
-    { id: 3, name: '练气三层', expReq: 350, atkBonus: 70, hpBonus: 700, defBonus: 14, mpBonus: 110, breakthroughReq: { probability: 0.9 } },
-    { id: 4, name: '练气四层', expReq: 500, atkBonus: 85, hpBonus: 850, defBonus: 16, mpBonus: 130, breakthroughReq: { probability: 0.9 } },
-    { id: 5, name: '练气五层', expReq: 700, atkBonus: 100, hpBonus: 1000, defBonus: 20, mpBonus: 150, breakthroughReq: { probability: 0.8 } },
-    { id: 6, name: '练气六层', expReq: 1000, atkBonus: 120, hpBonus: 1200, defBonus: 25, mpBonus: 180, breakthroughReq: { probability: 0.8 } },
-    { id: 7, name: '练气七层', expReq: 1500, atkBonus: 140, hpBonus: 1400, defBonus: 30, mpBonus: 210, breakthroughReq: { probability: 0.7 } },
-    { id: 8, name: '练气八层', expReq: 2200, atkBonus: 170, hpBonus: 1700, defBonus: 35, mpBonus: 250, breakthroughReq: { probability: 0.7 } },
-    { id: 9, name: '练气九层', expReq: 3000, atkBonus: 200, hpBonus: 2000, defBonus: 40, mpBonus: 300, breakthroughReq: { probability: 0.6 } },
-    { id: 10, name: '练气圆满', expReq: 5000, atkBonus: 250, hpBonus: 2500, defBonus: 50, mpBonus: 400, breakthroughReq: { probability: 0.5, itemId: 'pill_foundation' } },
+// Commercial v6.1 Ultra Granular Realms
+// Structure:
+// Qi: 1-10
+// Others: Early(1), Mid(2), Late(3), Peak(4), Half-Step(5)
 
-    // 2. 筑基期 (Foundation Establishment)
-    { id: 11, name: '筑基初期', expReq: 10000, atkBonus: 400, hpBonus: 4000, defBonus: 100, mpBonus: 1000, breakthroughReq: { probability: 0.9 } },
-    { id: 12, name: '筑基中期', expReq: 20000, atkBonus: 600, hpBonus: 6000, defBonus: 150, mpBonus: 1500, breakthroughReq: { probability: 0.8 } },
-    { id: 13, name: '筑基后期', expReq: 40000, atkBonus: 900, hpBonus: 9000, defBonus: 220, mpBonus: 2200, breakthroughReq: { probability: 0.7 } },
-    { id: 14, name: '筑基圆满', expReq: 80000, atkBonus: 1300, hpBonus: 13000, defBonus: 300, mpBonus: 3000, breakthroughReq: { probability: 0.5, itemId: 'pill_gold_core' } },
+const BASE_QI_HP = 2000;
+const BASE_QI_ATK = 100;
 
-    // 3. 金丹期 (Golden Core)
-    { id: 21, name: '金丹初期', expReq: 150000, atkBonus: 2000, hpBonus: 25000, defBonus: 500, mpBonus: 5000, breakthroughReq: { probability: 0.8 } },
-    { id: 22, name: '金丹中期', expReq: 300000, atkBonus: 2800, hpBonus: 35000, defBonus: 700, mpBonus: 7000, breakthroughReq: { probability: 0.7 } },
-    { id: 23, name: '金丹后期', expReq: 600000, atkBonus: 3800, hpBonus: 48000, defBonus: 1000, mpBonus: 9500, breakthroughReq: { probability: 0.6 } },
-    { id: 24, name: '金丹圆满', expReq: 1000000, atkBonus: 5000, hpBonus: 65000, defBonus: 1400, mpBonus: 13000, breakthroughReq: { probability: 0.4, itemId: 'pill_nascent' } },
-
-    // 4. 元婴期 (Nascent Soul)
-    { id: 31, name: '元婴初期', expReq: 2000000, atkBonus: 8000, hpBonus: 100000, defBonus: 2000, mpBonus: 20000, breakthroughReq: { probability: 0.7 } },
-    { id: 32, name: '元婴中期', expReq: 4000000, atkBonus: 11000, hpBonus: 150000, defBonus: 2800, mpBonus: 30000, breakthroughReq: { probability: 0.6 } },
-    { id: 33, name: '元婴后期', expReq: 8000000, atkBonus: 15000, hpBonus: 220000, defBonus: 3800, mpBonus: 45000, breakthroughReq: { probability: 0.5 } },
-    { id: 34, name: '元婴圆满', expReq: 15000000, atkBonus: 20000, hpBonus: 320000, defBonus: 5000, mpBonus: 65000, breakthroughReq: { probability: 0.3, itemId: 'pill_spirit' } },
-
-    // 5. 化神期 (Spirit Severing)
-    { id: 41, name: '化神初期', expReq: 30000000, atkBonus: 30000, hpBonus: 500000, defBonus: 8000, mpBonus: 100000, breakthroughReq: { probability: 0.6 } },
-    { id: 42, name: '化神中期', expReq: 60000000, atkBonus: 45000, hpBonus: 800000, defBonus: 12000, mpBonus: 160000, breakthroughReq: { probability: 0.5 } },
-    { id: 43, name: '化神后期', expReq: 120000000, atkBonus: 65000, hpBonus: 1200000, defBonus: 18000, mpBonus: 250000, breakthroughReq: { probability: 0.4 } },
-    { id: 44, name: '化神圆满', expReq: 250000000, atkBonus: 90000, hpBonus: 1800000, defBonus: 25000, mpBonus: 400000, breakthroughReq: { probability: 0.2 } },
+// Major Realm Base Stats (Start of 'Early')
+// Multiplier approx 3.5x per major jump
+const MAJOR_REALMS = [
+    { id: 1, name: '练气', tiers: 10, baseAtk: 100, baseHp: 2000, nextPill: 'pill_foundation' },
+    { id: 2, name: '筑基', tiers: 5, baseAtk: 3500, baseHp: 80000, nextPill: 'pill_gold_core' },
+    { id: 3, name: '金丹', tiers: 5, baseAtk: 25000, baseHp: 600000, nextPill: 'pill_nascent' },
+    { id: 4, name: '元婴', tiers: 5, baseAtk: 150000, baseHp: 4000000, nextPill: 'pill_spirit' },
+    { id: 5, name: '化神', tiers: 5, baseAtk: 800000, baseHp: 25000000, nextPill: 'pill_void' }, // Need new pills conceptually
+    { id: 6, name: '炼虚', tiers: 5, baseAtk: 5000000, baseHp: 2e8 },
+    { id: 7, name: '出窍', tiers: 5, baseAtk: 20000000, baseHp: 1e9 },
+    { id: 8, name: '分神', tiers: 5, baseAtk: 80000000, baseHp: 5e9 },
+    { id: 9, name: '合体', tiers: 5, baseAtk: 300000000, baseHp: 2.5e10 },
+    { id: 10, name: '大乘', tiers: 5, baseAtk: 1200000000, baseHp: 1.5e11 },
+    { id: 11, name: '渡劫', tiers: 5, baseAtk: 5000000000, baseHp: 8e11 },
+    // Immortal
+    { id: 12, name: '散仙', tiers: 5, baseAtk: 3.0e10, baseHp: 5e12 },
+    { id: 13, name: '真仙', tiers: 5, baseAtk: 1.5e11, baseHp: 2e13 },
+    { id: 14, name: '玄仙', tiers: 5, baseAtk: 6.0e11, baseHp: 1e14 },
+    { id: 15, name: '金仙', tiers: 5, baseAtk: 3.0e12, baseHp: 5e14 },
+    { id: 16, name: '准圣', tiers: 5, baseAtk: 1.5e13, baseHp: 3e15 },
+    { id: 17, name: '圣人', tiers: 5, baseAtk: 1.0e15, baseHp: 1e17 },
 ];
 
-// Helper to get realm by ID
+const SUBS_5 = [
+    { suffix: '初期', mult: 1.0, prob: 1.0 },
+    { suffix: '中期', mult: 1.3, prob: 0.9 },
+    { suffix: '后期', mult: 1.6, prob: 0.8 },
+    { suffix: '圆满', mult: 2.0, prob: 0.7 },
+    { suffix: '半步', mult: 2.5, prob: 0.5, isHalfStep: true } // Transitions to Next
+];
+
+const generateRealms = (): Realm[] => {
+    const list: Realm[] = [];
+
+    MAJOR_REALMS.forEach((major, index) => {
+        const nextMajor = MAJOR_REALMS[index + 1];
+
+        if (major.name === '练气') {
+            // Manual Qi 1-10
+            for (let i = 1; i <= 10; i++) {
+                const progress = i / 10; // 0.1 to 1.0
+                const isPeak = i === 10;
+                list.push({
+                    id: i,
+                    name: `练气${i === 10 ? '圆满' : i + '层'}`,
+                    expReq: Math.floor(100 * Math.pow(1.5, i)),
+                    atkBonus: Math.floor(major.baseAtk * (1 + progress * 14)), // 100 -> 1500
+                    defBonus: Math.floor(major.baseAtk * (1 + progress * 14)),
+                    hpBonus: Math.floor(major.baseHp * (1 + progress * 14)), // 2000 -> 30000
+                    mpBonus: Math.floor(500 * (1 + progress * 14)),
+                    critRateBonus: 0.01 + (i * 0.004),
+                    dodgeRateBonus: 0.01 + (i * 0.004),
+                    breakthroughReq: {
+                        probability: 1.0 - (i * 0.04), // 1.0 -> 0.6
+                        itemId: isPeak ? major.nextPill : undefined,
+                        failPenaltyExp: isPeak ? 5000 : 0
+                    }
+                });
+            }
+        } else {
+            // Standard 5-Tier
+            // ID Scheme: MajorID * 10 + SubID (1-5)
+            // e.g. Foundation(2) -> 21, 22, 23, 24, 25
+            SUBS_5.forEach((sub, subIdx) => {
+                const subId = subIdx + 1; // 1-5
+                const realId = major.id * 10 + subId;
+
+                let name = major.name + sub.suffix;
+                if (sub.isHalfStep && nextMajor) {
+                    name = `半步${nextMajor.name}`;
+                }
+
+                // Growth Curve interaction
+                const growth = sub.mult;
+                const isHalfStep = sub.isHalfStep;
+
+                // Exponential Exp
+                const baseExp = 50000 * Math.pow(3.5, major.id - 2);
+                const tierExp = baseExp * (1 + subIdx * 0.5);
+
+                const statsMult = growth;
+
+                list.push({
+                    id: realId,
+                    name: name,
+                    expReq: Math.floor(tierExp),
+                    atkBonus: Math.floor(major.baseAtk * statsMult),
+                    defBonus: Math.floor(major.baseAtk * statsMult),
+                    hpBonus: Math.floor(major.baseHp * statsMult),
+                    mpBonus: Math.floor((major.baseHp * statsMult) * 0.2),
+                    critRateBonus: Math.min(0.30, 0.05 + (major.id * 0.015)),
+                    dodgeRateBonus: Math.min(0.10, 0.05 + (major.id * 0.005)),
+                    breakthroughReq: {
+                        probability: isHalfStep ? 0.2 : sub.prob, // Half-step -> Next is hard
+                        itemId: isHalfStep ? major.nextPill : undefined,
+                        failPenaltyExp: Math.floor(tierExp * 0.5)
+                    }
+                });
+            });
+        }
+    });
+
+    return list;
+};
+
+export const REALMS: Realm[] = generateRealms();
+
 export const getRealm = (id: number): Realm | undefined => REALMS.find(r => r.id === id);

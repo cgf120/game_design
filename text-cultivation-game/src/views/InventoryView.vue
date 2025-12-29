@@ -3,8 +3,14 @@
     <!-- 1. Header with Capacity -->
     <div class="px-4 py-3 bg-neutral-900 border-b border-amber-900/30 flex justify-between items-center z-10">
         <h2 class="text-amber-500 font-bold tracking-widest text-lg">储物袋</h2>
-        <!-- Capacity Bar -->
-        <div class="flex flex-col items-end w-32">
+        <div class="flex items-center gap-4">
+            <button 
+                @click="showDecompose = true"
+                class="text-xs text-amber-500/80 hover:text-amber-400 border border-amber-500/30 px-2 py-1 rounded"
+            >
+                批量分解
+            </button>
+            <div class="flex flex-col items-end w-32">
             <div class="text-[10px] text-neutral-500 font-mono mb-1">
                 容量 {{ slots.length }} / {{ maxSlots }}
             </div>
@@ -14,6 +20,7 @@
                     :style="{ width: `${(slots.length / maxSlots) * 100}%` }"
                 ></div>
             </div>
+        </div>
         </div>
     </div>
 
@@ -53,7 +60,7 @@
     <transition name="fade">
         <HomePanelModal 
             v-if="selectedSlot" 
-            :title="getItemName(selectedSlot.itemId)" 
+            :title="getSlotTitle(selectedSlot)" 
             @close="selectedSlot = null"
         >
             <div class="space-y-4">
@@ -118,6 +125,65 @@
         </HomePanelModal>
     </transition>
 
+    <!-- 5. Batch Decompose Modal -->
+    <transition name="fade">
+        <HomePanelModal 
+            v-if="showDecompose" 
+            title="批量分解" 
+            @close="showDecompose = false"
+        >
+            <div class="space-y-6">
+                <div class="text-neutral-400 text-sm">
+                    请勾选要自动分解的装备品质：
+                </div>
+                
+                <!-- Checkboxes -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div 
+                        v-for="opt in QUALITY_OPTIONS" 
+                        :key="opt.label"
+                        @click="toggleDecompose(opt.label)"
+                        class="border rounded px-3 py-2 flex items-center gap-3 cursor-pointer transition-colors"
+                        :class="[
+                            decomposeQualities.includes(opt.label) 
+                                ? 'bg-amber-900/30 border-amber-600' 
+                                : 'bg-black border-neutral-700 hover:border-neutral-500'
+                        ]"
+                    >
+                        <div 
+                            class="w-4 h-4 rounded-sm border flex items-center justify-center transition-colors"
+                            :class="decomposeQualities.includes(opt.label) ? 'bg-amber-500 border-amber-500' : 'border-neutral-500'"
+                        >
+                            <span v-if="decomposeQualities.includes(opt.label)" class="text-black text-[10px] font-bold">✓</span>
+                        </div>
+                        <span :class="opt.color">{{ opt.label }}</span>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="bg-neutral-800/50 p-3 rounded text-sm space-y-1">
+                    <div class="flex justify-between text-neutral-400">
+                        <span>预计分解数量</span>
+                        <span class="text-white font-mono">{{ decomposePreview.count }}</span>
+                    </div>
+                    <div class="flex justify-between text-neutral-400">
+                        <span>预计获得灵石</span>
+                        <span class="text-amber-400 font-mono">+{{ decomposePreview.value }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <button 
+                    @click="executeDecompose"
+                    class="w-full py-3 bg-red-900/80 border border-red-700 text-red-100 rounded shadow hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :disabled="decomposePreview.count === 0"
+                >
+                    确认分解
+                </button>
+            </div>
+        </HomePanelModal>
+    </transition>
+
   </div>
 </template>
 
@@ -159,7 +225,21 @@ const filteredSlots = computed(() => {
 });
 
 // Helpers
-function getItemName(id: string) { return getItem(id)?.name || '未知物件'; }
+import { getItemQuality } from '../core/utils/item';
+
+function getSlotTitle(slot: InventorySlot) {
+    const item = getItem(slot.itemId);
+    if (!item) return '未知物件';
+    
+    const quality = getItemQuality(slot);
+    if (!quality || quality.label === '下品') {
+        return item.name;
+    }
+    
+    return `[${quality.label}] ${item.name}`;
+}
+
+
 function getItemDesc(id: string) { return getItem(id)?.desc || '并无特别之处。'; }
 function getItemIcon(id: string) { 
     const i = getItem(id);
@@ -168,7 +248,9 @@ function getItemIcon(id: string) {
     
     // Handle Equipment
     if (i.type === 'equipment' && i.slot) {
-        return `icon_type_${i.slot}`; // icon_type_weapon, icon_type_armor, etc.
+        if (['helm', 'boots'].includes(i.slot)) return 'icon_type_armor';
+        if (['necklace', 'belt'].includes(i.slot)) return 'icon_type_accessory';
+        return `icon_type_${i.slot}`; 
     }
 
     // Handle Others
@@ -219,6 +301,58 @@ function handleDiscard(id: string) {
       selectedSlot.value = null;
     }
   });
+}
+
+// --- Batch Decompose Logic ---
+import { QUALITY_TIERS, getDecomposeValue } from '../core/utils/item';
+
+const showDecompose = ref(false);
+const decomposeQualities = ref<string[]>([]);
+const QUALITY_OPTIONS = [
+    QUALITY_TIERS.common,
+    QUALITY_TIERS.good,
+    QUALITY_TIERS.superior,
+    QUALITY_TIERS.peerless
+];
+
+const decomposePreview = computed(() => {
+    let count = 0;
+    let value = 0;
+    
+    // Scan inventory locally for preview
+    const list = inventoryStore.inventory;
+    for (const slot of list) {
+        const item = getItem(slot.itemId);
+        if (!item || item.type !== 'equipment') continue;
+        
+        const q = getItemQuality(slot);
+        if (decomposeQualities.value.includes(q.label)) {
+            count++;
+            value += getDecomposeValue(slot);
+        }
+    }
+    return { count, value };
+});
+
+function toggleDecompose(qualityLabel: string) {
+    const idx = decomposeQualities.value.indexOf(qualityLabel);
+    if (idx === -1) decomposeQualities.value.push(qualityLabel);
+    else decomposeQualities.value.splice(idx, 1);
+}
+
+function executeDecompose() {
+    if (decomposePreview.value.count === 0) return;
+    
+    const result = inventoryStore.batchDecompose(decomposeQualities.value);
+    
+    showModal({ 
+        title: '分解完成', 
+        content: `成功分解 ${result.count} 件装备，获得 ${result.totalValue} 灵石。`, 
+        showCancel: false 
+    });
+    
+    showDecompose.value = false;
+    decomposeQualities.value = [];
 }
 </script>
 

@@ -51,6 +51,10 @@
                 <div class="text-[10px] text-neutral-500 line-clamp-2 leading-relaxed group-hover:text-neutral-400 relative z-10">
                     {{ map.desc }}
                 </div>
+                <!-- Drop Info -->
+                <div class="mt-2 pt-2 border-t border-neutral-700/50 text-[10px] text-neutral-600 group-hover:text-neutral-500 truncate" v-if="map.drops">
+                    <span class="text-neutral-700 font-bold mr-1">掉落:</span> {{ getMapDrops(map) }}
+                </div>
             </div>
         </div>
         
@@ -111,6 +115,7 @@ import { useSectStore } from '../stores/sect';
 import { usePlayerStore } from '../stores/player';
 import { MAPS } from '../core/constants/maps';
 import { getRealm } from '../core/constants/realms';
+import { getItem } from '../core/constants/items';
 import type { GameMap } from '../core/models/combat';
 
 const combat = useCombat();
@@ -207,5 +212,28 @@ function getLogClass(log: string) {
   if (log.includes('[遭遇]')) return 'text-blue-300';
   if (log.includes('攻击了你')) return 'text-red-300';
   return 'text-neutral-400';
+}
+
+function getMapDrops(map: GameMap) {
+    if (!map.drops) return '';
+    // Unique names
+    const names = new Set<string>();
+    map.drops.forEach(d => {
+        if (d.itemId === 'spirit_stone') {
+             // Skip explicit spirit stone as it's common? Or keep it? User asked for "Possible Drops".
+             // Let's keep it but maybe abbreviated or just '灵石'
+             names.add('灵石');
+        } else {
+            const item = getItem(d.itemId);
+            if (item) {
+                names.add(item.name);
+            } else {
+                // Debugging Unknown Item logic
+                console.warn('Unknown Drop Item ID:', d.itemId);
+                names.add('未知物品');
+            }
+        }
+    });
+    return Array.from(names).slice(0, 4).join(' ');
 }
 </script>
