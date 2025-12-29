@@ -45,6 +45,10 @@
         <XianxiaIcon src="ui_nav_sect" fallback="⛩️" size="md" :glow="route.path === '/sect'" />
         <span class="text-[10px] mt-1 group-hover:text-gold transition-colors">宗门</span>
       </router-link>
+      <router-link to="/settings" class="nav-item group">
+        <XianxiaIcon src="ui_nav_abode" fallback="⚙️" size="md" :glow="route.path === '/settings'" />
+        <span class="text-[10px] mt-1 group-hover:text-gold transition-colors">设置</span>
+      </router-link>
     </nav>
   </div>
 </template>

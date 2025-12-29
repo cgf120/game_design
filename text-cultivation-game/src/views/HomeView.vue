@@ -28,16 +28,16 @@
          
          <!-- 3.1 ATTRIBUTE PANEL (Premium Jade Slip) -->
          <!-- 3.1 ATTRIBUTE PANEL (Premium Jade Slip) -->
-         <AttributePanel :stats="stats" />
+         <AttributePanel 
+            :stats="stats" 
+            :equipment="playerStore.player.equipment"
+            :spirit-root="playerStore.player.spiritRoot"
+         />
     </div>
     
     <!-- 4. BOTTOM DOCK (Fixed) -->
-    <!-- 4. BOTTOM DOCK (Fixed) -->
-    <DockNavigation 
-        :menu-items="menuItems"
-        :active-panel="activePanel"
-        @select="handleMenuSelect"
-    />
+    <!-- 4. BOTTOM DOCK (Hidden/Removed) -->
+
     <!-- 4. PANELS MODAL -->
     <transition name="fade">
         <HomePanelModal 
@@ -143,15 +143,15 @@ import XianxiaIcon from '../components/shared/XianxiaIcon.vue';
 import InkPanel from '../components/shared/InkPanel.vue';
 import SpiritButton from '../components/shared/SpiritButton.vue';
 import AttributePanel from '../components/home/AttributePanel.vue';
-import DockNavigation from '../components/home/DockNavigation.vue';
+// import DockNavigation from '../components/home/DockNavigation.vue';
 
 // Panels
-import PlayerStatsPanel from '../components/home/panels/PlayerStatsPanel.vue';
+// import PlayerStatsPanel from '../components/home/panels/PlayerStatsPanel.vue';
 import SkillPanel from '../components/home/panels/SkillPanel.vue';
 import LogPanel from '../components/home/panels/LogPanel.vue';
-import SpiritRootPanel from '../components/home/panels/SpiritRootPanel.vue';
-import SettingsPanel from '../components/home/panels/SettingsPanel.vue';
-import ForgePanel from '../components/home/panels/ForgePanel.vue';
+// import SpiritRootPanel from '../components/home/panels/SpiritRootPanel.vue';
+// import SettingsPanel from '../components/home/panels/SettingsPanel.vue';
+// import ForgePanel from '../components/home/panels/ForgePanel.vue';
 
 // Assets
 import breakthroughBg from '@/assets/ui/ui_btn_breakthrough.png';
@@ -182,60 +182,29 @@ const efficiencyText = computed(() => `修炼效率: +${playerStore.cultivationR
 
 // --- MENU CONFIG ---
 // --- MENU CONFIG ---
-// Filtered main items for the Dock
-const menuItems = computed(() => [
-    { id: 'stats', label: '属性', icon: 'ui_stat_atk', fallback: '📊' },
-    // { id: 'skills', label: '神通', icon: 'ui_stat_mp', fallback: '⚡' },
-    { id: 'roots', label: '灵根', icon: 'ui_bg_mandala', fallback: '🌱' },
-    { id: 'forge', label: '炼器', icon: 'ui_icon_furnace', fallback: '🔥' },
-    { id: 'settings', label: '设置', icon: 'ui_nav_abode', fallback: '⚙️' },
-]);
-
 // --- PANEL LOGIC ---
 const activePanelTitle = computed(() => {
     switch(activePanel.value) {
-        case 'stats': return '角色属性';
         case 'skills': return '神通秘术';
-        case 'roots': return '五行灵根';
         case 'logs': return '修真日志';
-        case 'settings': return '系统设置';
         default: return '';
     }
 });
 
 const activePanelComponent = computed(() => {
     switch(activePanel.value) {
-        case 'stats': return PlayerStatsPanel;
         case 'skills': return SkillPanel;
-        case 'roots': return SpiritRootPanel;
         case 'logs': return LogPanel;
-        case 'settings': return SettingsPanel;
-        case 'forge': return ForgePanel;
         default: return null;
     }
 });
 
 const activePanelProps = computed(() => {
     switch(activePanel.value) {
-        case 'stats': return { stats: stats.value, equipment: playerStore.player.equipment, spiritRoot: playerStore.player.spiritRoot };
-        case 'roots': return { roots: playerStore.player.spiritRoot };
         case 'logs': return { logs: recentLogs.value };
         default: return {};
     }
 });
-
-function handleMenuSelect(id: string) {
-    if (id === 'bag') {
-        router.push('/inventory');
-        return;
-    }
-    // Placeholder feedback for unconnected items
-    if (id === 'steps') {
-        addToast('功法系统暂未开放', 'info');
-        return;
-    }
-    activePanel.value = id;
-}
 
 // --- CULTIVATION LOGIC ---
 function manualCultivate() {
