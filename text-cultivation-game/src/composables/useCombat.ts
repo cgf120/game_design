@@ -129,7 +129,7 @@ export function useCombat() {
                         // Defense Mitigation
                         const actualDmg = Math.max(1, Math.floor(rawDmg - (enemy.stats.def * 0.5))); // Enemy def effectiveness
 
-                        damage = actualDmg;
+                        damage = Math.floor(actualDmg * (0.95 + Math.random() * 0.1));
 
                         // Apply to enemy
                         enemy.stats.hp -= damage;
@@ -152,7 +152,7 @@ export function useCombat() {
             if (!skillUsed) {
                 // Basic Attack
                 const isCrit = Math.random() < playerStats.critRate;
-                let damage = Math.max(1, playerStats.atk - enemy.stats.def);
+                let damage = Math.max(1, playerStats.atk - enemy.stats.def); damage = Math.floor(damage * (0.95 + Math.random() * 0.1));
                 if (isCrit) {
                     damage = Math.floor(damage * 1.5);
                 }
@@ -172,7 +172,7 @@ export function useCombat() {
             if (isDodge) {
                 log(`${enemy.name} 发动攻击，但被你躲开了！`);
             } else {
-                let enemyDmg = Math.max(1, enemy.stats.atk - playerStats.def);
+                let enemyDmg = Math.max(1, enemy.stats.atk - playerStats.def); enemyDmg = Math.floor(enemyDmg * (0.95 + Math.random() * 0.1));
                 playerMutableStats.hp -= enemyDmg;
                 log(`${enemy.name} 攻击了你，造成 ${enemyDmg} 点伤害。`);
             }

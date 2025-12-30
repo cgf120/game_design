@@ -61,42 +61,20 @@
         <HomePanelModal 
             v-if="selectedSlot" 
             :title="getSlotTitle(selectedSlot)" 
+            variant="center"
+            :clean="true"
             @close="selectedSlot = null"
         >
             <div class="space-y-4">
-                <!-- Icon & Desc -->
-                <div class="flex gap-4">
-                    <div class="w-16 h-16 bg-black border border-neutral-700 rounded flex items-center justify-center relative flex-none">
-                         <XianxiaIcon 
-                            :src="getItemIcon(selectedSlot.itemId)" 
-                            fallback="📦" 
-                            size="lg" 
-                        />
-                         <span class="absolute bottom-0 right-0 bg-neutral-800 text-[10px] px-1 text-white/70">
-                            x{{ selectedSlot.count }}
-                        </span>
-                    </div>
-                    <div class="flex-1 text-sm text-neutral-300 leading-relaxed font-serif">
-                        {{ getItemDesc(selectedSlot.itemId) }}
-                        
-                        <!-- Extra Stats Display -->
-                        <div class="mt-3 space-y-1 text-xs font-mono">
-                            <!-- Helper function result wrapper -->
-                            <div v-for="stat in getItemStatsList(selectedSlot)" :key="stat.label" class="flex justify-between border-b border-white/5 pb-0.5">
-                                <span class="text-neutral-500">{{ stat.label }}</span>
-                                <span :class="stat.color">{{ stat.value }}</span>
-                            </div>
-                            
-                            <!-- Effect Display -->
-                            <div v-if="getItemEffect(selectedSlot.itemId)" class="text-emerald-500 pt-1">
-                                {{ getItemEffect(selectedSlot.itemId) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- New Rich Item Card -->
+                <ItemDetailCard 
+                    v-if="selectedSlot && getItem(selectedSlot.itemId)"
+                    :item="getItem(selectedSlot.itemId)!"
+                    :instance="selectedSlot"
+                />
 
-                <!-- Stats / Actions -->
-                <div class="pt-4 border-t border-white/5 flex flex-col gap-2">
+                <!-- Actions -->
+                <div class="pt-2 flex flex-col gap-2">
                     
                     <button 
                         v-if="canUse(selectedSlot.itemId)"
@@ -198,7 +176,7 @@ import { useModal } from '../composables/useModal';
 import InventoryItemSlot from '../components/inventory/InventorySlot.vue';
 import InventoryFilterBar from '../components/inventory/InventoryFilterBar.vue';
 import HomePanelModal from '../components/home/HomePanelModal.vue';
-import XianxiaIcon from '../components/shared/XianxiaIcon.vue';
+import ItemDetailCard from '../components/shared/ItemDetailCard.vue';
 
 const inventoryStore = useInventoryStore();
 const { showModal } = useModal();
@@ -239,29 +217,6 @@ function getSlotTitle(slot: InventorySlot) {
     return `[${quality.label}] ${item.name}`;
 }
 
-
-function getItemDesc(id: string) { return getItem(id)?.desc || '并无特别之处。'; }
-function getItemIcon(id: string) { 
-    const i = getItem(id);
-    if (!i) return 'icon_bag';
-    if (i.icon) return i.icon;
-    
-    // Handle Equipment
-    if (i.type === 'equipment' && i.slot) {
-        if (['helm', 'boots'].includes(i.slot)) return 'icon_type_armor';
-        if (['necklace', 'belt'].includes(i.slot)) return 'icon_type_accessory';
-        return `icon_type_${i.slot}`; 
-    }
-
-    // Handle Others
-    if (['consumable', 'material'].includes(i.type)) {
-        return `icon_type_${i.type}`;
-    }
-
-    return 'icon_bag'; 
-}
-
-import { getItemStatsList, getItemEffect } from '../core/utils/item';
 
 function canUse(id: string) { return getItem(id)?.type === 'consumable'; }
 function canEquip(id: string) { 

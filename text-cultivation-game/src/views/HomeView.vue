@@ -1,7 +1,7 @@
 <template>
   <div class="h-full flex flex-col overflow-hidden bg-black select-none relative">
     
-    <!-- 1. STATUS HEADER -->
+    <!-- 1. STATUS HEADER (Fixed Top) -->
     <StatusHeader 
         :name="playerStore.player.name || '寻道者'"
         :realm-name="currentRealmName || '凡人'"
@@ -12,44 +12,108 @@
         :day="gameDay"
     />
 
-    <!-- 2. CHARACTER VISUALIZER -->
-    <div class="flex-none relative bg-black/20">
-         <CharacterVisualizer 
-            :progress="progressPercentage"
-            :efficiency-text="efficiencyText"
-            :can-breakthrough="canBreakthrough"
-            @cultivate="manualCultivate"
-            @breakthrough="openBreakthroughDialog"
-         />
-    </div>
-
-    <!-- 3. MAIN CONTENT AREA (Scrollable) -->
-    <div class="flex-1 min-h-0 relative overflow-y-auto scrollbar-hide py-4 space-y-6 pb-24">
+    <!-- 2. MAIN CONTENT (Flex column, no scroll) -->
+    <div class="flex-1 flex flex-col min-h-0 relative bg-black/20 pb-safe">
          
-         <!-- 3.1 ATTRIBUTE PANEL (Premium Jade Slip) -->
-         <!-- 3.1 ATTRIBUTE PANEL (Premium Jade Slip) -->
-         <AttributePanel 
-            :stats="stats" 
-            :equipment="playerStore.player.equipment"
-            :spirit-root="playerStore.player.spiritRoot"
-         />
-    </div>
-    
-    <!-- 4. BOTTOM DOCK (Fixed) -->
-    <!-- 4. BOTTOM DOCK (Hidden/Removed) -->
+         <!-- CHARACTER VISUALIZER (Top, Pushed Up) -->
+         <!-- Spacer to push down very slightly from header if needed, but requested "Higher".
+              Actually flex-col with space-between pushes it top/bottom. 
+              We want Character Top, Attribute Mid, Chat Bottom.
+         -->
+         <div class="flex-1 flex flex-col justify-start pt-2">
+             <CharacterVisualizer 
+                class="flex-shrink-0 z-10"
+                :progress="progressPercentage"
+                :efficiency-text="efficiencyText"
+                :can-breakthrough="canBreakthrough"
+                @cultivate="manualCultivate"
+                @breakthrough="openBreakthroughDialog"
+                @open-slot="openSlotSelection"
+             />
 
-    <!-- 4. PANELS MODAL -->
+             <!-- SPACER to push Attribute Panel down slightly but keep it connected -->
+             <div class="flex-grow max-h-4"></div>
+
+             <!-- ATTRIBUTE PANEL (Middle-Bottom) -->
+             <AttributePanel 
+                class="w-full max-w-md mx-auto z-10"
+                :stats="stats" 
+                :spirit-root="playerStore.player.spiritRoot"
+             />
+         </div>
+         
+         <!-- CHAT PANEL (Fixed Bottom above nav) -->
+         <ChatPanel 
+            :logs="recentLogs"
+            class="w-full z-20 shrink-0"
+         />
+
+         <!-- Background Decoration (Mountain) -->
+         <div class="absolute inset-x-0 bottom-0 h-1/2 opacity-20 bg-[url('@/assets/ui/bg_texture_mountain.png')] bg-contain bg-bottom bg-no-repeat pointer-events-none z-0"></div>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- SLOT SELECTION MODAL -->
     <transition name="fade">
-        <HomePanelModal 
-            v-if="activePanel" 
-            :title="activePanelTitle" 
-            @close="activePanel = null"
-        >
-            <component :is="activePanelComponent" v-bind="activePanelProps" @reset="confirmReset" />
-        </HomePanelModal>
+        <div v-if="showSlotModal" class="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 backdrop-blur-sm" @click.self="showSlotModal = false">
+             <InkPanel class="w-full max-w-sm max-h-[80vh] flex flex-col" :decorated="true">
+                 <div class="p-3 border-b border-neutral-800 bg-black/20 flex justify-between items-center shrink-0">
+                     <span class="text-amber-500 font-bold tracking-wider">当前装备: {{ getSlotLabel(selectedSlot) }}</span>
+                     <button @click="showSlotModal = false" class="text-neutral-500 hover:text-neutral-300">✕</button>
+                 </div>
+                 
+                 <div class="p-2 overflow-y-auto min-h-0 flex-1 space-y-4">
+                     <!-- Current Equipped Item (Rich Card) -->
+                     <div v-if="currentEquippedItem && getItemDef(currentEquippedItem.itemId)" class="space-y-2">
+                         <ItemDetailCard 
+                             :item="getItemDef(currentEquippedItem.itemId)!"
+                             :instance="currentEquippedItem"
+                         />
+                         
+                         <div 
+                            @click="handleUnequip"
+                            class="p-3 border border-red-900/30 bg-red-900/10 rounded flex items-center justify-center text-red-400 text-xs cursor-pointer hover:bg-red-900/20 font-bold"
+                         >
+                            卸下当前装备
+                         </div>
+                     </div>
+                     <div v-else class="text-center py-4 text-neutral-500 text-xs italic">
+                         当前部位未装备物品
+                     </div>
+
+                     <!-- Divider -->
+                     <div class="border-t border-neutral-800 my-2 pt-2 text-xs text-neutral-400 font-bold">
+                         可替换装备
+                     </div>
+
+                     <!-- Available Items List -->
+                      <div v-if="slotItems.length === 0" class="py-4 text-center text-neutral-600 text-xs">
+                          背包中暂无可用装备
+                      </div>
+
+                      <div 
+                        v-for="item in slotItems" 
+                        :key="item.itemId"
+                        @click="handleEquip(item.itemId)"
+                        class="p-2 border border-neutral-800 bg-black/40 rounded flex gap-3 items-center cursor-pointer hover:border-amber-700/50 hover:bg-neutral-900 transition-colors"
+                      >
+                           <XianxiaIcon :src="getItemDef(item.itemId)?.icon" fallback="📦" size="sm" :glow="true" />
+                           <div class="flex-1">
+                               <div class="flex justify-between">
+                                   <span class="text-xs font-bold" :class="getItemColor(item)">{{ getItemDef(item.itemId)?.name }}</span>
+                                   <span class="text-[10px] text-neutral-600">Lv.{{ item.instanceData?.level || 0 }}</span>
+                               </div>
+                               <div class="text-[10px] text-neutral-500 line-clamp-1">{{ getItemDef(item.itemId)?.desc }}</div>
+                           </div>
+                           <span class="text-xs text-amber-600">装备</span>
+                      </div>
+                 </div>
+             </InkPanel>
+        </div>
     </transition>
 
-    <!-- BREAKTHROUGH MODAL (Keep existing logic but ensure it overlays everything) -->
+    <!-- BREAKTHROUGH MODAL -->
     <transition name="fade">
         <div v-if="showBreakthroughModal" class="absolute inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
             <InkPanel class="w-full max-w-sm" :decorated="true">
@@ -133,36 +197,28 @@ import { usePlayerStore } from '../stores/player';
 import { getItem } from '../core/constants/items';
 import { useToast } from '../composables/useToast';
 import { useInventoryStore } from '../stores/inventory';
-import { useRouter } from 'vue-router';
+import { getItemQuality } from '../core/utils/item';
+import type { EquipmentSlot, InventorySlot } from '../core/models/item';
 
 // Sub Components
 import StatusHeader from '../components/home/StatusHeader.vue';
 import CharacterVisualizer from '../components/home/CharacterVisualizer.vue';
-import HomePanelModal from '../components/home/HomePanelModal.vue';
 import XianxiaIcon from '../components/shared/XianxiaIcon.vue';
 import InkPanel from '../components/shared/InkPanel.vue';
 import SpiritButton from '../components/shared/SpiritButton.vue';
 import AttributePanel from '../components/home/AttributePanel.vue';
-// import DockNavigation from '../components/home/DockNavigation.vue';
-
-// Panels
-// import PlayerStatsPanel from '../components/home/panels/PlayerStatsPanel.vue';
-import SkillPanel from '../components/home/panels/SkillPanel.vue';
-import LogPanel from '../components/home/panels/LogPanel.vue';
-// import SpiritRootPanel from '../components/home/panels/SpiritRootPanel.vue';
-// import SettingsPanel from '../components/home/panels/SettingsPanel.vue';
-// import ForgePanel from '../components/home/panels/ForgePanel.vue';
+import ChatPanel from '../components/home/ChatPanel.vue';
+import ItemDetailCard from '../components/shared/ItemDetailCard.vue';
 
 // Assets
 import breakthroughBg from '@/assets/ui/ui_btn_breakthrough.png';
 
 const playerStore = usePlayerStore();
+const inventoryStore = useInventoryStore();
 const { addToast } = useToast();
-const router = useRouter();
 
 // --- STATE ---
 const recentLogs = ref<string[]>(['[系统] 欢迎来到修真世界...']);
-const activePanel = ref<string | null>(null);
 
 // --- COMPUTED ---
 const stats = computed(() => playerStore.effectiveStats);
@@ -176,35 +232,7 @@ const currentExp = computed(() => playerStore.player.cultivation.currentExp);
 const maxExp = computed(() => playerStore.maxExp);
 const progressPercentage = computed(() => playerStore.progressPercentage);
 const canBreakthrough = computed(() => currentExp.value >= maxExp.value);
-
-// Efficiency display
-const efficiencyText = computed(() => `修炼效率: +${playerStore.cultivationRate}/秒`);
-
-// --- MENU CONFIG ---
-// --- MENU CONFIG ---
-// --- PANEL LOGIC ---
-const activePanelTitle = computed(() => {
-    switch(activePanel.value) {
-        case 'skills': return '神通秘术';
-        case 'logs': return '修真日志';
-        default: return '';
-    }
-});
-
-const activePanelComponent = computed(() => {
-    switch(activePanel.value) {
-        case 'skills': return SkillPanel;
-        case 'logs': return LogPanel;
-        default: return null;
-    }
-});
-
-const activePanelProps = computed(() => {
-    switch(activePanel.value) {
-        case 'logs': return { logs: recentLogs.value };
-        default: return {};
-    }
-});
+const efficiencyText = computed(() => `+${playerStore.cultivationRate}/s`);
 
 // --- CULTIVATION LOGIC ---
 function manualCultivate() {
@@ -224,11 +252,82 @@ function manualCultivate() {
       msg += ` (气血+${pStats.hp - oldHp}, 灵力+${pStats.mp - oldMp})`;
   }
   
+  // Also push to chat logs
   recentLogs.value.unshift(msg);
-  if (recentLogs.value.length > 20) recentLogs.value.pop();
+  if (recentLogs.value.length > 50) recentLogs.value.pop();
 }
 
-// --- BREAKTHROUGH LOGIC (Ported) ---
+// --- EQUIPMENT SLOT SELECTION LOGIC ---
+const showSlotModal = ref(false);
+const selectedSlot = ref<EquipmentSlot | null>(null);
+
+const slotLabels: Record<string, string> = {
+    weapon: '武器', armor: '护甲', helm: '头盔', boots: '履部', necklace: '项链', belt: '法宝'
+};
+
+function getSlotLabel(slot: string | null) {
+    if (!slot) return '';
+    return slotLabels[slot] || slot;
+}
+
+function openSlotSelection(slot: EquipmentSlot) {
+    selectedSlot.value = slot;
+    showSlotModal.value = true;
+}
+
+const slotItems = computed(() => {
+    if (!selectedSlot.value) return [];
+    // Filter inventory for items compatible with the slot
+    return inventoryStore.getBagItems().filter(slot => {
+        const item = getItem(slot.itemId);
+        return item && item.type === 'equipment' && item.slot === selectedSlot.value;
+    });
+});
+
+const currentEquippedItem = computed(() => {
+    if (!selectedSlot.value) return null;
+    const slot = playerStore.player.equipment[selectedSlot.value];
+    if (!slot) return null;
+    return slot;
+});
+
+function getItemDef(itemId: string) {
+    return getItem(itemId);
+}
+
+function getItemColor(slot: InventorySlot) {
+    const q = getItemQuality(slot);
+    return q.color;
+}
+
+function handleEquip(itemId: string) {
+    if (inventoryStore.equipItem(itemId)) {
+        addToast('装备成功', 'success');
+        showSlotModal.value = false;
+        
+        const item = getItem(itemId);
+        recentLogs.value.unshift(`[系统] 装备了 [${item?.name || '未知'}]`);
+    } else {
+        addToast('装备失败', 'error');
+    }
+}
+
+function handleUnequip() {
+    if (!selectedSlot.value || !currentEquippedItem.value) return;
+    
+    // Move to inventory
+    const itemName = getItemDef(currentEquippedItem.value.itemId)?.name;
+    playerStore.player.inventory.push(currentEquippedItem.value);
+    delete playerStore.player.equipment[selectedSlot.value];
+    // Reactive update?
+    playerStore.save();
+    
+    addToast('已卸下装备', 'success');
+    showSlotModal.value = false;
+    recentLogs.value.unshift(`[系统] 卸下了 [${itemName || '未知'}]`);
+}
+
+// --- BREAKTHROUGH LOGIC ---
 const breakthroughBgUrl = breakthroughBg;
 const showBreakthroughModal = ref(false);
 const breakthroughItemCount = ref(0);
@@ -280,21 +379,6 @@ function confirmBreakthrough() {
     addToast(result.message, 'error', 5000);
   }
 }
-
-import { useModal } from '../composables/useModal';
-
-function confirmReset() {
-  const { showModal } = useModal();
-  showModal({
-    title: '兵解重修',
-    content: '道友确定要放弃当前修为，重新来过吗？此操作无法撤销。',
-    showCancel: true,
-    onConfirm: () => {
-      playerStore.reset();
-      activePanel.value = null;
-    }
-  });
-}
 </script>
 
 <style scoped>
@@ -306,5 +390,16 @@ function confirmReset() {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
 </style>

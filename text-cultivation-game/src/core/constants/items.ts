@@ -73,28 +73,40 @@ function getName(realmId: number, slot: string, qualityId: string): string {
     }
 }
 
+// Icon Mapping Strategy (Matched to existing assets):
+const ICON_MAP: Record<string, string> = {
+    weapon: 'icon_type_weapon',
+    armor: 'icon_type_armor',
+    helm: 'icon_type_armor',   // Fallback to armor icon
+    boots: 'icon_type_armor',  // Fallback to armor icon
+    necklace: 'icon_type_accessory',
+    belt: 'icon_type_accessory'
+};
+
 const generateItems = (): Record<string, Item> => {
     const items: Record<string, Item> = {};
 
-    items['spirit_stone'] = { id: 'spirit_stone', name: '灵石', type: 'material', desc: '通用货币', salePrice: 1, stackable: true };
+    items['spirit_stone'] = { id: 'spirit_stone', name: '灵石', type: 'material', desc: '通用货币', salePrice: 1, stackable: true, icon: 'ui_stat_spiritstone' };
 
     // Gathering Materials
+    // Using 'icon_type_material' for general mats if specific ones don't exist
+    // 'item_herb' etc do NOT exist, so use generic
     const MATS = [
-        { id: 'mat_herb', name: '药草', desc: '普通的草药。', price: 5 },
-        { id: 'mat_wood', name: '木材', desc: '建筑材料。', price: 5 },
-        { id: 'mat_iron', name: '铁矿', desc: '锻造材料。', price: 10 },
-        { id: 'mat_copper', name: '铜矿', desc: '锻造材料。', price: 10 },
-        { id: 'mat_sea_shell', name: '海贝', desc: '海边的贝壳。', price: 5 },
-        { id: 'mat_essence', name: '妖气结晶', desc: '妖兽掉落的结晶。', price: 50 },
-        { id: 'mat_bone', name: '兽骨', desc: '炼器材料。', price: 20 },
-        { id: 'mat_silk', name: '蛛丝', desc: '编织材料。', price: 30 },
-        { id: 'mat_crystal', name: '水晶', desc: '蕴含灵气。', price: 100 },
-        { id: 'mat_stone', name: '矿石', desc: '普通的矿石。', price: 15 },
-        { id: 'mat_meteor', name: '陨铁', desc: '天外之物。', price: 500 },
+        { id: 'mat_herb', name: '药草', desc: '普通的草药。', price: 5, icon: 'icon_type_material' },
+        { id: 'mat_wood', name: '木材', desc: '建筑材料。', price: 5, icon: 'icon_type_material' },
+        { id: 'mat_iron', name: '铁矿', desc: '锻造材料。', price: 10, icon: 'icon_type_material' },
+        { id: 'mat_copper', name: '铜矿', desc: '锻造材料。', price: 10, icon: 'icon_type_material' },
+        { id: 'mat_sea_shell', name: '海贝', desc: '海边的贝壳。', price: 5, icon: 'icon_type_material' },
+        { id: 'mat_essence', name: '妖气结晶', desc: '妖兽掉落的结晶。', price: 50, icon: 'icon_type_material' },
+        { id: 'mat_bone', name: '兽骨', desc: '炼器材料。', price: 20, icon: 'icon_type_material' },
+        { id: 'mat_silk', name: '蛛丝', desc: '编织材料。', price: 30, icon: 'icon_type_material' },
+        { id: 'mat_crystal', name: '水晶', desc: '蕴含灵气。', price: 100, icon: 'icon_type_material' },
+        { id: 'mat_stone', name: '矿石', desc: '普通的矿石。', price: 15, icon: 'icon_type_material' },
+        { id: 'mat_meteor', name: '陨铁', desc: '天外之物。', price: 500, icon: 'icon_type_material' },
     ];
 
     MATS.forEach(m => {
-        items[m.id] = { id: m.id, name: m.name, type: 'material', desc: m.desc, salePrice: m.price, stackable: true };
+        items[m.id] = { id: m.id, name: m.name, type: 'material', desc: m.desc, salePrice: m.price, stackable: true, icon: m.icon };
     });
 
     REALM_CONFIG.forEach((realm, rIdx) => {
@@ -152,28 +164,19 @@ const generateItems = (): Record<string, Item> => {
                     setRange(slotCfg.sub, subBase, isSubRate);
                 }
 
-                // Skill Logic (Seed based? Or just static per ID?)
-                // Since this generates the Database Definitions, we can't be too random per instance *here* 
-                // BUT we can assign a "Potential" or just define specific Legend items that ALWAYS have traits.
-                // Or, more likely, valid Database Items shouldn't have specific skills unless they are Uniques.
-                // However, for the sake of the requested task, let's say "Legend" items defined here have a chance to come with a skill pre-defined in the DB entry
-                // OR we leave `skills` empty in DB and let the `Inventory` logic roll it.
-                // The prompt asks for "Equipment Skills", implying they exist.
-                // Let's attach skills to specific "Legend" entries to ensure they appear in game for now properly.
-
+                // Skill Logic
                 const itemSkills: string[] = [];
                 if (tierKey === 'legend') {
-                    // 20% of legends have a skill in this DB generation (representing "Fixed" artifacts? mainly for testing reliability)
                     if (slot === 'belt') {
-                        // Belts often have Rage
                         itemSkills.push('tx_rage');
                     } else if (slot === 'necklace' || slot === 'helm') {
-                        // High chance for big teji
                         itemSkills.push(TEJI_POOL[rIdx % TEJI_POOL.length]);
                     } else if (Math.random() > 0.5) {
                         itemSkills.push(TEJI_POOL[(rIdx + 1) % TEJI_POOL.length]);
                     }
                 }
+
+                const iconKey = ICON_MAP[slot] || 'icon_bag';
 
                 items[itemId] = {
                     id: itemId,
@@ -185,7 +188,8 @@ const generateItems = (): Record<string, Item> => {
                     stackable: false,
                     statsRange: statsRange,
                     gemSlots: Math.floor(rIdx / 4) + 1,
-                    skills: itemSkills.length > 0 ? itemSkills : undefined // Attach skill to DB entry
+                    skills: itemSkills.length > 0 ? itemSkills : undefined,
+                    icon: iconKey
                 };
             });
         });

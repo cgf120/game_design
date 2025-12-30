@@ -93,9 +93,8 @@ const hasAsset = computed(() => !!props.src);
 // We need to resolve the path dynamically. 
 // Note: Dynamic import with template literals in Vite requires specific structure.
 const assetPath = computed(() => {
-  if (!props.src) return '';
-  // Assuming all UI assets are png for now
-  return new URL(`/src/assets/ui/${props.src}.png`, import.meta.url).href;
+  // Use relative path to ensure Vite processes it correctly relative to this component
+  return new URL(`../../assets/ui/${props.src}.png`, import.meta.url).href;
 });
 
 function handleError() {

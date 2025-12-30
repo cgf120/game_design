@@ -46,17 +46,28 @@
 body {
     background-color: var(--c-void);
     color: var(--c-text-primary);
-    font-family: "KaiTi", "STKaiti", "BiauKai", "Georgia", "Times New Roman", serif;
-    /* Fallback stack for Chinese Serif */
+    /* 
+       "PingFang SC", "Microsoft YaHei" are standard sans-serifs, but we want Serif for Cultivation feel.
+       "Songti SC", "STSong" are good Mac/iOS options. "Noto Serif SC" is good for web if loaded (not here).
+    */
+    font-family: "Songti SC", "STSong", "SimSun", "PMingLiU", serif;
     -webkit-font-smoothing: antialiased;
+
+    /* Global Texture Overlay */
+    background-image:
+        radial-gradient(circle at 50% 0%, #1a1a1a 0%, transparent 70%),
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.01) 0px, rgba(255, 255, 255, 0.01) 1px, transparent 1px, transparent 10px);
+    background-attachment: fixed;
 }
 
 /* Unicode Border Utility */
 .unicode-border {
     position: relative;
     border: 1px solid #333;
-    background: var(--c-ink-base);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    background: rgba(18, 18, 18, 0.85);
+    /* Slightly transparent */
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
 .unicode-border::after {
@@ -74,24 +85,26 @@ body {
 }
 
 /* Glow Effects */
+/* Glow Effects */
 .text-glow-gold {
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.1);
 }
 
 .text-glow-jade {
-    text-shadow: 0 0 5px rgba(0, 255, 127, 0.5);
+    text-shadow: 0 0 10px rgba(0, 255, 127, 0.3), 0 0 20px rgba(0, 255, 127, 0.1);
 }
 
 .text-glow-blue {
-    text-shadow: 0 0 5px rgba(0, 191, 255, 0.5);
+    text-shadow: 0 0 10px rgba(0, 191, 255, 0.3), 0 0 20px rgba(0, 191, 255, 0.1);
 }
 
-.text-glow-red {
-    text-shadow: 0 0 5px rgba(255, 69, 0, 0.5);
+.text-shadow-gold {
+    text-shadow: 1px 1px 0px #000, 0 0 15px rgba(255, 165, 0, 0.6);
 }
 
 .box-glow {
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 215, 0, 0.1);
 }
 
 /* Talisman/Ink Card Style */

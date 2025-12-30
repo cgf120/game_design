@@ -17,7 +17,11 @@ export interface PlayerStats {
 export interface PlayerEquipment {
     weapon?: InventorySlot;
     armor?: InventorySlot;
-    accessory?: InventorySlot;
+    accessory?: InventorySlot; // Generic Accessory
+    helm?: InventorySlot; // Head
+    boots?: InventorySlot; // Legs
+    necklace?: InventorySlot; // Accessory 1
+    belt?: InventorySlot; // Accessory 2 / Relic
 }
 
 export interface SpiritRoot {

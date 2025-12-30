@@ -31,7 +31,7 @@
     <div class="flex-1 flex flex-col min-h-0 border border-neutral-800 bg-neutral-900/30 relative">
         <div class="flex justify-center gap-8 py-2 text-sm border-b border-neutral-800/50 bg-black">
             <button 
-                v-for="tab in ['经营', '建设', '炼器']" 
+                v-for="tab in ['经营', '建设', '炼器', '强化']" 
                 :key="tab"
                 @click="activeTab = tab"
                 class="relative px-2 transition-colors"
@@ -240,6 +240,11 @@
                 </div>
             </div>
 
+            <!-- Forge/Enhance Tab -->
+            <div v-if="activeTab === '强化'" class="h-full">
+                <ForgePanel :show-header="false" />
+            </div>
+
         </div>
     </div>
   </div>
@@ -252,6 +257,7 @@ import { useAbodeStore } from '../stores/abode';
 import { useCraftingStore } from '../stores/crafting';
 import { usePlayerStore } from '../stores/player';
 import { useModal } from '../composables/useModal';
+import ForgePanel from '../components/home/panels/ForgePanel.vue';
 
 const abodeStore = useAbodeStore();
 const craftingStore = useCraftingStore();

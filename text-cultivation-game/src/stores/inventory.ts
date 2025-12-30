@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { InventorySlot } from '../core/models/item';
+import type { InventorySlot, EquipmentSlot } from '../core/models/item';
 import { ITEMS, getItem } from '../core/constants/items';
 import { getItemQuality, getDecomposeValue } from '../core/utils/item';
 
@@ -108,10 +108,10 @@ export const useInventoryStore = defineStore('inventory', () => {
 
     function equipItem(itemId: string): boolean {
         const itemDef = getItem(itemId);
-        // Fix: Allow 'equipment' type
-        if (!itemDef || (itemDef.type !== 'equipment' && !['weapon', 'armor', 'accessory'].includes(itemDef.type))) return false;
+        // Fix: Allow 'equipment' type and any valid slot
+        if (!itemDef || (itemDef.type !== 'equipment')) return false;
 
-        const slotName = itemDef.slot as 'weapon' | 'armor' | 'accessory';
+        const slotName = itemDef.slot as EquipmentSlot;
         if (!slotName) return false;
 
         // Find the specific slot in inventory
@@ -177,7 +177,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
 
     // Socket a gem into an EQUIPPED item
-    function socketGemToEquipped(slotName: 'weapon' | 'armor' | 'accessory', gemId: string): { success: boolean, msg: string } {
+    function socketGemToEquipped(slotName: EquipmentSlot, gemId: string): { success: boolean, msg: string } {
         const equipSlot = playerStore.player.equipment[slotName];
         if (!equipSlot) return { success: false, msg: '该部位未装备物品' };
 
@@ -231,7 +231,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
 
     // Unsocket a gem from an EQUIPPED item
-    function unsocketGemFromEquipped(slotName: 'weapon' | 'armor' | 'accessory', gemIndex: number): { success: boolean, msg: string } {
+    function unsocketGemFromEquipped(slotName: EquipmentSlot, gemIndex: number): { success: boolean, msg: string } {
         const equipSlot = playerStore.player.equipment[slotName];
         if (!equipSlot) return { success: false, msg: '该部位未装备物品' };
 

@@ -59,13 +59,13 @@
                         @click.stop="handleUnsocket(i-1)"
                     >
                         <XianxiaIcon 
-                            :src="getGemIcon(currentGems[i-1])" 
+                            :src="getGemIcon(currentGems[i-1] || '')" 
                             size="custom"
                             customClass="w-full h-full animate-pulse-slow" 
                         />
                         <!-- Tooltip (Simple) -->
                         <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-black border border-neutral-700 p-1 text-[10px] whitespace-nowrap hidden group-hover/gem:block z-10">
-                            {{ getItemName(currentGems[i-1]) }}
+                            {{ getItemName(currentGems[i-1] || '') }}
                         </div>
                     </div>
                     <!-- Empty Slot -->
@@ -144,7 +144,12 @@ import { useInventoryStore } from '../../../stores/inventory';
 import { getItem } from '../../../core/constants/items';
 import type { InventorySlot } from '../../../core/models/item';
 import XianxiaIcon from '../../shared/XianxiaIcon.vue';
-import SpiritButton from '../../shared/SpiritButton.vue';
+
+const props = withDefaults(defineProps<{
+    showHeader?: boolean;
+}>(), {
+    showHeader: true
+});
 
 const playerStore = usePlayerStore();
 const inventoryStore = useInventoryStore();
@@ -179,7 +184,6 @@ const availableGems = computed(() => {
     // Dep: uiKey
     uiKey.value;
     return inventoryStore.inventory.filter(slot => {
-        const item = getItem(slot.itemId);
         // Simple heuristic: if item ID starts with 'gem_' or type is material (with stats?)
         // Let's use name check or ID prefix for safety as type is generic 'material'
         return slot.itemId.startsWith('gem_'); 
@@ -217,19 +221,7 @@ const totalStats = computed(() => {
     return stats;
 });
 
-function getStatName(key: string) {
-    const map: Record<string, string> = {
-        atk: '攻击',
-        def: '防御',
-        hp: '气血',
-        mp: '真元',
-        critRate: '暴击',
-        dodgeRate: '闪避',
-        maxHp: '气血上限',
-        maxMp: '真元上限'
-    };
-    return map[key] || key;
-}
+
 
 // Helper to format stat display
 function getStatDiff(key: string, baseVal: number) {
@@ -242,8 +234,6 @@ function getStatDiff(key: string, baseVal: number) {
     
     if (isPercent) {
         // Format as percentage (e.g. 0.02 -> 2%)
-        // Use Math.round to avoid 1.99999%
-        const pct = Math.round(diff * 1000) / 10; // Keep 1 decimal if needed, or just Math.round(diff * 100)
         // Let's use 1 decimal place max
         return `(+${parseFloat((diff * 100).toFixed(1))}%)`;
     }
@@ -251,13 +241,7 @@ function getStatDiff(key: string, baseVal: number) {
     return `(+${Math.round(diff)})`;
 }
 
-function formatStatValue(key: string, val: number) {
-    const isPercent = ['critRate', 'dodgeRate'].includes(key);
-    if (isPercent) {
-        return `${parseFloat((val * 100).toFixed(1))}%`;
-    }
-    return Math.round(val);
-}
+
 
 function getGemIcon(itemId: string) {
     const item = getItem(itemId);

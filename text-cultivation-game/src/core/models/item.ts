@@ -1,5 +1,5 @@
 export type ItemType = 'material' | 'consumable' | 'equipment';
-export type EquipmentSlot = 'weapon' | 'armor' | 'helm' | 'boots' | 'necklace' | 'belt';
+export type EquipmentSlot = 'weapon' | 'armor' | 'accessory' | 'helm' | 'boots' | 'necklace' | 'belt';
 
 export interface ItemStats {
     atk?: number;
