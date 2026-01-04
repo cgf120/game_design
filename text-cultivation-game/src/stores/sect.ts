@@ -49,8 +49,8 @@ export const useSectStore = defineStore('sect', () => {
             rankId: sect.ranks[0].id, // Start at lowest rank
             contribution: 0,
             joinTime: Date.now(),
-            lastSalaryTime: 0,
-            activeTask: undefined
+            activeTask: undefined,
+            lastSalaryTime: Date.now() // Start with cooldown to prevent exploit
         };
 
         playerStore.save();
