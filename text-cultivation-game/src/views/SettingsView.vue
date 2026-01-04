@@ -131,8 +131,14 @@ function addExp() {
     addToast('获得 100w 修为', 'success');
 }
 
+// function addItems(itemId: string) {
+//     inventoryStore.addItem(itemId, 1);
+//     addToast('获得物品', 'success');
+// }
+// Kept for generic use, but specific buttons below use specific calls.
+
 function addItems(itemId: string) {
-    inventoryStore.addItem(itemId, 1);
+    inventoryStore.addItem(itemId);
     addToast('获得物品', 'success');
 }
 
@@ -147,24 +153,30 @@ function addContribution() {
 }
 
 function addFWJSet_Low() {
-    inventoryStore.addItem('weapon_qinggang', 1);
-    inventoryStore.addItem('armor_night', 1);
-    inventoryStore.addItem('accessory_flower', 1);
-    addToast('获得梦幻新手套', 'success');
+    // Realm 2 (Foundation) Rare items or Realm 1 Epic
+    inventoryStore.addItem('eq_2_weapon_rare', 1);
+    inventoryStore.addItem('eq_2_armor_rare', 1);
+    inventoryStore.addItem('eq_2_necklace_rare', 1);
+     inventoryStore.addItem('eq_2_boots_rare', 1);
+    addToast('获得筑基期套装', 'success');
 }
 
 function addFWJSet_High() {
-    inventoryStore.addItem('weapon_yitian', 1);
-    inventoryStore.addItem('armor_golden', 1);
-    inventoryStore.addItem('accessory_soul', 1);
-    addToast('获得梦幻神装', 'success');
+    // Realm 8 (Distraction - High level) Legend items
+    inventoryStore.addItem('eq_8_weapon_legend', 1);
+    inventoryStore.addItem('eq_8_armor_legend', 1);
+    inventoryStore.addItem('eq_8_necklace_legend', 1);
+    inventoryStore.addItem('eq_8_boots_legend', 1);
+     inventoryStore.addItem('eq_8_helm_legend', 1);
+      inventoryStore.addItem('eq_8_belt_legend', 1);
+    addToast('获得分神期神装', 'success');
 }
 
 function addGemSet() {
-    inventoryStore.addItem('gem_sun', 5);
-    inventoryStore.addItem('gem_moon', 5);
-    inventoryStore.addItem('gem_light', 5);
-    inventoryStore.addItem('gem_black', 5);
+    inventoryStore.addItem('gem_atk', 5);
+    inventoryStore.addItem('gem_def', 5);
+    inventoryStore.addItem('gem_hp', 5);
+    inventoryStore.addItem('gem_spd', 5);
     addToast('获得宝石袋', 'success');
 }
 

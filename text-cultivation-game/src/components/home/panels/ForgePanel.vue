@@ -75,25 +75,25 @@
 
              <!-- Stats Preview -->
              <div class="mt-auto border-t border-neutral-800 pt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-neutral-400">
-                 <div v-if="selectedItemDef?.stats?.atk || totalStats.atk" class="flex justify-between">
+                 <div v-if="totalStats.atk" class="flex justify-between">
                      <span>攻击</span>
-                     <span class="text-amber-500 font-mono">{{ totalStats.atk || 0 }} <span v-if="getStatDiff('atk', selectedItemDef?.stats?.atk || 0)" class="text-neutral-500 text-[10px]">{{ getStatDiff('atk', selectedItemDef?.stats?.atk || 0) }}</span></span>
+                     <span class="text-amber-500 font-mono">{{ totalStats.atk || 0 }} <span v-if="getStatDiff('atk', getBaseStat('atk'))" class="text-neutral-500 text-[10px]">{{ getStatDiff('atk', getBaseStat('atk')) }}</span></span>
                  </div>
-                 <div v-if="selectedItemDef?.stats?.def || totalStats.def" class="flex justify-between">
+                 <div v-if="totalStats.def" class="flex justify-between">
                      <span>防御</span>
-                     <span class="text-blue-500 font-mono">{{ totalStats.def || 0 }} <span v-if="getStatDiff('def', selectedItemDef?.stats?.def || 0)" class="text-neutral-500 text-[10px]">{{ getStatDiff('def', selectedItemDef?.stats?.def || 0) }}</span></span>
+                     <span class="text-blue-500 font-mono">{{ totalStats.def || 0 }} <span v-if="getStatDiff('def', getBaseStat('def'))" class="text-neutral-500 text-[10px]">{{ getStatDiff('def', getBaseStat('def')) }}</span></span>
                  </div>
-                 <div v-if="selectedItemDef?.stats?.hp || totalStats.hp" class="flex justify-between">
+                 <div v-if="totalStats.hp" class="flex justify-between">
                      <span>气血</span>
-                     <span class="text-green-500 font-mono">{{ totalStats.hp || 0 }} <span v-if="getStatDiff('hp', selectedItemDef?.stats?.hp || 0)" class="text-neutral-500 text-[10px]">{{ getStatDiff('hp', selectedItemDef?.stats?.hp || 0) }}</span></span>
+                     <span class="text-green-500 font-mono">{{ totalStats.hp || 0 }} <span v-if="getStatDiff('hp', getBaseStat('hp'))" class="text-neutral-500 text-[10px]">{{ getStatDiff('hp', getBaseStat('hp')) }}</span></span>
                  </div>
-                 <div v-if="selectedItemDef?.stats?.mp || totalStats.mp" class="flex justify-between">
+                 <div v-if="totalStats.mp" class="flex justify-between">
                      <span>灵力</span>
-                     <span class="text-sky-500 font-mono">{{ totalStats.mp || 0 }} <span v-if="getStatDiff('mp', selectedItemDef?.stats?.mp || 0)" class="text-neutral-500 text-[10px]">{{ getStatDiff('mp', selectedItemDef?.stats?.mp || 0) }}</span></span>
+                     <span class="text-sky-500 font-mono">{{ totalStats.mp || 0 }} <span v-if="getStatDiff('mp', getBaseStat('mp'))" class="text-neutral-500 text-[10px]">{{ getStatDiff('mp', getBaseStat('mp')) }}</span></span>
                  </div>
-                 <div v-if="selectedItemDef?.stats?.critRate || totalStats.critRate" class="flex justify-between">
+                 <div v-if="totalStats.critRate" class="flex justify-between">
                      <span>暴击</span>
-                     <span class="text-purple-500 font-mono">{{ ((totalStats.critRate || 0) * 100).toFixed(0) }}% <span v-if="getStatDiff('critRate', selectedItemDef?.stats?.critRate || 0)" class="text-neutral-500 text-[10px]">{{ getStatDiff('critRate', selectedItemDef?.stats?.critRate || 0) }}</span></span>
+                     <span class="text-purple-500 font-mono">{{ ((totalStats.critRate || 0) * 100).toFixed(0) }}% <span v-if="getStatDiff('critRate', getBaseStat('critRate'))" class="text-neutral-500 text-[10px]">{{ getStatDiff('critRate', getBaseStat('critRate')) }}</span></span>
                  </div>
              </div>
         </div>
@@ -204,10 +204,17 @@ const totalStats = computed(() => {
     uiKey.value;
     if (!selectedItemDef.value) return {};
     
-    // Clone base stats
-    const stats: Record<string, number> = { ...selectedItemDef.value.stats };
+    // 1. Start with Instance Stats (Procedural) OR Base Stats (Static)
+    // IMPORTANT: Check selectedItem instance stats first!
+    let stats: Record<string, number> = {};
+
+    if (selectedItem.value && selectedItem.value.instanceData && selectedItem.value.instanceData.stats) {
+        stats = { ...selectedItem.value.instanceData.stats };
+    } else if (selectedItemDef.value.stats) {
+        stats = { ...selectedItemDef.value.stats };
+    }
     
-    // Add gem stats
+    // 2. Add Gem Stats
     currentGems.value.forEach(gemId => {
         const gem = getItem(gemId);
         if (gem?.stats) {
@@ -222,6 +229,16 @@ const totalStats = computed(() => {
 });
 
 
+
+// Helper to get base stat (Instance or Static)
+function getBaseStat(key: string): number {
+    if (selectedItem.value && selectedItem.value.instanceData && selectedItem.value.instanceData.stats) {
+        // @ts-ignore
+        return selectedItem.value.instanceData.stats[key] || 0;
+    }
+    // @ts-ignore
+    return selectedItemDef.value?.stats?.[key] || 0;
+}
 
 // Helper to format stat display
 function getStatDiff(key: string, baseVal: number) {

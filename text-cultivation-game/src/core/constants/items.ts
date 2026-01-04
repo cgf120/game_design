@@ -109,6 +109,65 @@ const generateItems = (): Record<string, Item> => {
         items[m.id] = { id: m.id, name: m.name, type: 'material', desc: m.desc, salePrice: m.price, stackable: true, icon: m.icon };
     });
 
+    // --- NEW: Pills (Breakthrough) ---
+    const PILLS = [
+        { id: 'pill_foundation', name: '筑基丹', desc: '突破筑基期的关键丹药，增加突破成功率。', price: 1000 },
+        { id: 'pill_gold_core', name: '金丹', desc: '凝结金丹的辅助丹药。', price: 5000 },
+        { id: 'pill_nascent', name: '元婴丹', desc: '碎丹成婴的灵丹妙药。', price: 20000 },
+        { id: 'pill_spirit', name: '化神丹', desc: '化神期突破专用。', price: 100000 },
+        { id: 'pill_void', name: '炼虚丹', desc: '感悟虚空的丹药。', price: 500000 },
+    ];
+    PILLS.forEach(p => {
+        items[p.id] = {
+            id: p.id,
+            name: p.name,
+            type: 'consumable',
+            desc: p.desc,
+            salePrice: p.price,
+            stackable: true,
+            icon: 'icon_type_pill',
+            breakthroughBonus: 0.2 // 20% success rate bonus per pill
+        };
+    });
+
+    // --- NEW: Gems ---
+    // Using standard types that map to stats
+    const GEMS = [
+        { id: 'gem_atk', name: '红玛瑙', desc: '蕴含狂暴力量的宝石 (攻+50)', stats: { atk: 50 }, color: '#f44336' },
+        { id: 'gem_def', name: '月亮石', desc: '坚硬无比的宝石 (防+20)', stats: { def: 20 }, color: '#9e9e9e' },
+        { id: 'gem_hp', name: '光芒石', desc: '充满生命力的宝石 (血+200)', stats: { hp: 200 }, color: '#4caf50' },
+        { id: 'gem_spd', name: '黑宝石', desc: '轻盈的宝石 (速+5)', stats: { spd: 5 }, color: '#212121' },
+    ];
+    GEMS.forEach(g => {
+        items[g.id] = {
+            id: g.id,
+            name: g.name,
+            type: 'gem', // New type
+            desc: g.desc,
+            salePrice: 200,
+            stackable: true,
+            icon: 'icon_jewel', // Make sure this asset exists or use fallback
+            stats: g.stats
+        };
+    });
+
+    // --- NEW: Manuals (Skill Books) ---
+    // Placeholder for manual_sweep used in SettingsView
+    items['manual_sweep'] = {
+        id: 'manual_sweep',
+        name: '《横扫千军》秘籍',
+        type: 'consumable',
+        desc: '记载着强力功法的卷轴。',
+        salePrice: 0,
+        stackable: true,
+        icon: 'icon_type_paper',
+        useEffect: {
+            type: 'learn_skill',
+            value: 'sk_sect_sweep' // Must match ID in skills.ts
+        }
+    };
+
+
     REALM_CONFIG.forEach((realm, rIdx) => {
         const realmMult = Math.pow(STAT_GROWTH, rIdx);
 

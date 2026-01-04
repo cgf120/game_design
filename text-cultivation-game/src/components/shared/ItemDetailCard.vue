@@ -68,8 +68,8 @@
                 <span class="w-1 h-3 bg-[#c7b299]"></span> 基础属性
             </div>
             <div v-for="(val, key) in baseStats" :key="key" class="flex items-center justify-between text-xs pl-2">
-                <span class="text-[#888]">{{ getStatLabel(key) }}</span>
-                <span class="text-white font-mono tracking-wide">+{{ val }}</span>
+                <span class="text-[#888]">{{ getStatLabel(String(key)) }}</span>
+                <span class="text-white font-mono tracking-wide">{{ formatStatValue(String(key), Number(val)) }}</span>
             </div>
         </div>
 
@@ -231,6 +231,13 @@ function getStatLabel(key: string) {
         dodgeRate: '闪避率'
     };
     return map[key] || key;
+}
+
+function formatStatValue(key: string, val: number) {
+    if (['critRate', 'dodgeRate'].includes(key)) {
+        return `+${(val * 100).toFixed(0)}%`;
+    }
+    return `+${val}`;
 }
 
 </script>

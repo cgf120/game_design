@@ -1,4 +1,4 @@
-export type ItemType = 'material' | 'consumable' | 'equipment';
+export type ItemType = 'material' | 'consumable' | 'equipment' | 'gem';
 export type EquipmentSlot = 'weapon' | 'armor' | 'accessory' | 'helm' | 'boots' | 'necklace' | 'belt';
 
 export interface ItemStats {
