@@ -41,6 +41,7 @@ export interface Item {
 
     // New Fields
     skills?: string[]; // IDs of attached skills (Teji/Texiao)
+    reqRealm?: number;
 }
 
 export interface InventorySlot {

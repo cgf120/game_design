@@ -6,7 +6,7 @@ import type { GameMap, Enemy } from '../core/models/combat';
 import { useSectStore } from '../stores/sect'; // Import SectStore
 
 import { SKILLS } from '../core/constants/skills'; // Import SKILLS constant
-import { getItem } from '../core/constants/items'; // Import getItem
+import { getItem, getRandomEquipmentId } from '../core/constants/items'; // Import getItem
 
 export function useCombat() {
     const playerStore = usePlayerStore();
@@ -267,14 +267,29 @@ export function useCombat() {
                 const invStore = useInventoryStore();
                 for (const drop of allDrops) {
                     if (Math.random() < drop.chance) {
+
+
                         // Determine amount (min-max)
                         const amount = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
 
-                        // Fix: Use imported getItem, inventory store does not expose getItem
-                        const item = getItem(drop.itemId);
+                        let itemId = drop.itemId;
 
-                        if (invStore.addItem(drop.itemId, amount)) {
-                            const name = item ? item.name : drop.itemId;
+                        // Parse Loot Placeholder: loot_eq_REALM_SLOT or loot_eq_REALM
+                        if (itemId.startsWith('loot_eq_')) {
+                            const parts = itemId.split('_');
+                            // loot, eq, realmId, slot?
+                            const rId = parseInt(parts[2]);
+                            const slot = parts[3]; // might be undefined
+
+                            if (!isNaN(rId)) {
+                                itemId = getRandomEquipmentId(rId, slot);
+                            }
+                        }
+
+                        const item = getItem(itemId);
+
+                        if (invStore.addItem(itemId, amount)) {
+                            const name = item ? item.name : itemId;
                             log(`[战利品] 获得了 ${name} x${amount}`);
                         }
                     }

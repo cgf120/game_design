@@ -1,243 +1,123 @@
 import type { GameMap, Enemy, DropItem } from '../models/combat';
-import { getEnemy } from './enemies';
+import { getEnemy, getMonstersByLevel } from './enemies';
+// @ts-ignore
+import mhxyMapsRaw from './mhxy_maps.json';
 
 // Commercial v6.9 Map Drops & Enemies (MHXY Strict)
+// Loaded from JSON
 
-interface FwjMapConfig {
-    realmId: number;
-    maps: {
-        name: string;
-        desc: string;
-        enemies: string[];
-        boss?: string;
-        drops?: string[]; // Gathering / Map Drops
-    }[];
+interface MhxyMap {
+    "地图编号": number;
+    "名称": string;
+    "等级": number | null;
+    "怪兽等级": number | null;
 }
 
-const FWJ_CONFIG: FwjMapConfig[] = [
-    // 1. 练气 (Qi) - East Bay
-    {
-        realmId: 1,
-        maps: [
-            {
-                name: '建邺城郊', desc: '祥和的郊外，偶有野兽出没。',
-                enemies: ['turtle', 'frog', 'boar'],
-                drops: ['mat_herb', 'mat_wood']
-            },
-            {
-                name: '东海湾', desc: '海风拂面，沙滩上爬满了甲壳生物。',
-                enemies: ['turtle', 'frog', 'caterpillar', 'tree_monster'],
-                drops: ['mat_sea_shell', 'mat_herb']
-            },
-            {
-                name: '沉船', desc: '阴暗潮湿的船舱，藏着古老的冤魂。',
-                enemies: ['caterpillar', 'frog', 'shrimp', 'crab'], boss: 'frog',
-                drops: ['mat_iron', 'mat_sea_shell']
-            }
-        ]
-    },
-    // 2. 筑基 (Foundation) - Pagoda
-    {
-        realmId: 2,
-        maps: [
-            { name: '江南野外', desc: '连接长安的交通要道。', enemies: ['boar', 'robber', 'gambler', 'wolf'], drops: ['mat_wood', 'mat_herb'] },
-            { name: '大雁塔一层', desc: '镇妖塔底层，妖气尚浅。', enemies: ['fox', 'spider', 'sheep', 'toad'], drops: ['mat_iron', 'mat_copper'] },
-            { name: '大雁塔顶层', desc: '塔顶妖气冲天，非强者勿入。', enemies: ['bat', 'barbarian', 'tiger'], boss: 'boss_ghost_king', drops: ['mat_essence'] }
-        ]
-    },
-    // 3. 金丹 (Golden Core) - Hell Maze
-    {
-        realmId: 3,
-        maps: [
-            { name: '海底迷宫', desc: '深海之下的神秘宫殿。', enemies: ['shrimp', 'crab', 'turtle'], drops: ['mat_crystal', 'mat_sea_shell'] },
-            { name: '地狱迷宫', desc: '阴森恐怖，鬼火磷磷。', enemies: ['ghost', 'vampire', 'zombie', 'skeleton'], boss: 'boss_ghost_king', drops: ['mat_bone', 'mat_essence'] },
-            { name: '盘丝岭', desc: '盘丝洞外，蛛网密布。', enemies: ['spider', 'rabbit', 'flower'], drops: ['mat_silk', 'mat_herb'] }
-        ]
-    },
-    // 4. 元婴 (Nascent) - Beiju / Dragon Cave
-    {
-        realmId: 4,
-        maps: [
-            { name: '北俱芦洲', desc: '冰封万里的苦寒之地。', enemies: ['bear', 'ancient_rui', 'butterfly'], drops: ['mat_crystal'] },
-            { name: '龙窟', desc: '蜿蜒曲折的龙之巢穴。', enemies: ['dragon', 'phoenix', 'wind_god'], boss: 'boss_dragon_god', drops: ['mat_essence', 'mat_meteor'] },
-            { name: '凤巢', desc: '传说中凤凰栖息之地。', enemies: ['phoenix', 'rain_master'], drops: ['mat_herb'] }
-        ]
-    },
-    // 5. 化神 (Spirit) - Ghost City / Heaven
-    {
-        realmId: 5,
-        maps: [
-            { name: '女娲神迹', desc: '上古大神女娲的遗迹。', enemies: ['heaven_soldier', 'heaven_general', 'nuwa_law'], drops: ['mat_crystal'] },
-            { name: '无名鬼城', desc: '被遗忘的沙漠古城。', enemies: ['ghost_general', 'vampire', 'nether_judge'], boss: 'boss_ghost_king', drops: ['mat_bone'] },
-            { name: '蓬莱仙岛', desc: '云雾缭绕的海上仙山。', enemies: ['turtle', 'dragon_tortoise', 'fog_fairy'], drops: ['mat_herb'] }
-        ]
-    },
-    // 6. 炼虚 (Void) - XiaoXiTian
-    {
-        realmId: 6,
-        maps: [
-            { name: '小西天', desc: '佛光中透着诡异妖气。', enemies: ['heaven_soldier', 'flame_demon', 'crane'], drops: ['mat_essence'] },
-            { name: '小雷音寺', desc: '伪佛之地。', enemies: ['crane', 'fog_fairy', 'king_kong'], boss: 'boss_ghost_king', drops: ['mat_meteor'] },
-            { name: '朱紫国', desc: '西域风情的古国。', enemies: ['puppet_man', 'puppet_beast', 'puppet_bird'], drops: ['mat_silk'] }
-        ]
-    },
-    // 7. 出窍 (Out of Body) - Kylin Mtn
-    {
-        realmId: 7,
-        maps: [
-            { name: '麒麟山', desc: '太岁头上动土。', enemies: ['spider', 'rat_general', 'barbarian'], drops: ['mat_bone'] },
-            { name: '波月洞', desc: '碗子山的一处妖洞。', enemies: ['cat_spirit', 'leopard', 'scorpion'], boss: 'boss_ghost_king', drops: ['mat_stone'] },
-            { name: '墨家村', desc: '隐世的机关术村落。', enemies: ['snake_demon', 'puppet_man', 'asura'], drops: ['mat_wood', 'mat_iron'] }
-        ]
-    },
-    // 8. 分神 (Distraction) - Sumeru
-    {
-        realmId: 8,
-        maps: [
-            { name: '须弥东界', desc: '佛家清净地，护法众多。', enemies: ['guard', 'child', 'guangmu'], drops: ['mat_crystal'] },
-            { name: '凌云渡', desc: '通往灵山的最后关隘。', enemies: ['guangmu', 'miaoyin', 'king_kong'], drops: ['mat_essence'] },
-            { name: '青丘', desc: '九尾狐族的聚居地。', enemies: ['fox', 'moon_charm'], drops: ['mat_herb'] }
-        ]
-    },
-    // 9. 合体 (Integration) - Chi Shui
-    {
-        realmId: 9,
-        maps: [
-            { name: '赤水洲', desc: '上古旱魃封印之地。', enemies: ['sun_meteor', 'leopard', 'scorpion'], drops: ['mat_meteor'] },
-            { name: '双子峰', desc: '阴阳交汇之地。', enemies: ['moon_charm', 'sun_meteor'], drops: ['mat_crystal'] },
-            { name: '轮回司', desc: '掌控生死的终极机构。', enemies: ['ghost_general', 'nether_judge', 'ox_head', 'horse_face'], boss: 'boss_ghost_king', drops: ['mat_bone'] }
-        ]
-    },
-    // 10. 大乘 (Mahayana) - End Game Mortal
-    {
-        realmId: 10,
-        maps: [
-            { name: '银华境', desc: '月光凝聚的秘境。', enemies: ['moon_charm', 'dragon_tortoise'], drops: ['mat_essence'] },
-            { name: '混沌秘境', desc: '天地初开的一角。', enemies: ['child', 'guard', 'asura'], boss: 'listen', drops: ['mat_meteor'] }
-        ]
-    },
-    // Immortals: High Tier cycling or re-use of Divine pets
-    {
-        realmId: 17,
-        maps: [
-            { name: '紫霄宫', desc: '道祖鸿钧讲道之地，万法源头。', enemies: ['heaven_general', 'phoenix', 'child', 'guard', 'listen'], boss: 'boss_chi_you', drops: ['mat_meteor', 'mat_crystal'] }
-        ]
-    }
-];
+const mhxyMaps = mhxyMapsRaw as unknown as MhxyMap[];
 
 // Drop Scaling Logic
 const getRealmDropConfig = (realmId: number) => {
     // Economy scales 3.5x per realm. 
-    // Realm 1: 10-25 SS. Realm 10: ~1M SS.
     const multi = Math.pow(3.5, realmId - 1);
-
-    // Equipment Drop Rate Scaling:
-    // Realm 1: 50% (High hook)
-    // Decreases by 5% per realm until Realm 10 (5% floor)
     const equipChance = Math.max(0.05, 0.5 - (realmId - 1) * 0.05);
 
     return {
         ssMin: Math.floor(10 * multi),
         ssMax: Math.floor(25 * multi),
-        matChance: 0.2, // 20% chance for materials
+        matChance: 0.2,
         equipChance: equipChance,
-        ssChance: 0.3 // 30% chance for Currency (per check)
+        ssChance: 0.3
     };
+};
+
+// Map MHXY Level to Game Realm Requirement (ID)
+const getRealmRequirement = (level: number): number => {
+    if (level <= 10) return Math.max(1, level); // Qi 1-10
+
+    // For levels > 10, map to Major Realms (21, 31, 41...)
+    // Rough Mapping:
+    // 11-20: Foundation (21)
+    // 21-40: Golden Core (31)
+    // 41-60: Nascent Soul (41)
+    // 61-90: Spirit Severing (51)
+    // 91-120: Void (61)
+    // 121-150: Integration (91) - Skipping some for density
+    // 150+: Mahayana (101)
+
+    if (level <= 20) return 21; // Foundation
+    if (level <= 40) return 31; // Golden Core
+    if (level <= 60) return 41; // Nascent Soul
+    if (level <= 90) return 51; // Spirit Severing
+    if (level <= 110) return 61; // Void
+    if (level <= 130) return 71; // Out of Body
+    if (level <= 150) return 81; // Distraction
+    return 101; // Mahayana+
 };
 
 const generateMaps = (): GameMap[] => {
     const maps: GameMap[] = [];
+    const processedNames = new Set<string>();
 
-    // 1. Process FWJ Mapped Configs
-    FWJ_CONFIG.forEach(config => {
-        const realmId = config.realmId;
-        const dCfg = getRealmDropConfig(realmId);
+    mhxyMaps.forEach(m => {
+        // 1. Filter Non-Combat / Invalid Maps
+        if (!m['名称']) return;
+        if (!m['等级']) return;
 
-        config.maps.forEach((mapCfg, idx) => {
-            const mapId = `map_${realmId}_${idx}`;
-            const reqRealmExact = realmId <= 1 ? 1 : (realmId - 1) * 10 + 1;
+        // 2. Filter Explicit Non-Combat Keywords
+        const name = m['名称'];
+        if (name.includes('帮派') || name.includes('家') || name.includes('店') || name.includes('擂台') || name.includes('牢')) return;
 
-            const enemies: Enemy[] = [];
+        // 3. Deduplicate
+        if (processedNames.has(name)) return;
+        processedNames.add(name);
 
-            // Standard Mobs
-            mapCfg.enemies.forEach((tplId) => {
-                enemies.push(getEnemy(tplId, realmId));
-            });
+        const mapLevel = m['等级'];
+        const reqRealmId = getRealmRequirement(mapLevel);
+        const majorRealm = Math.floor(reqRealmId / 10);
 
-            // Boss
-            if (mapCfg.boss) {
-                enemies.push(getEnemy(mapCfg.boss, realmId));
-            }
+        const mapId = `map_${m['地图编号']}`;
+        const dCfg = getRealmDropConfig(majorRealm);
 
-            // Map Drops (Balanced)
-            const mapDrops: DropItem[] = [];
+        // Dynamic Monster Generation
+        const enemies: Enemy[] = [];
+        const monsterIds = getMonstersByLevel(mapLevel, 4);
 
-            // 1. Spirit Stones (Scaled)
-            mapDrops.push({
-                itemId: 'spirit_stone',
-                min: dCfg.ssMin,
-                max: dCfg.ssMax,
-                chance: dCfg.ssChance
-            });
+        monsterIds.forEach(mid => {
+            enemies.push(getEnemy(mid, majorRealm));
+        });
 
-            // 2. Materials (Fixed config from FWJ_CONFIG)
-            if (mapCfg.drops) {
-                mapCfg.drops.forEach(d => {
-                    mapDrops.push({
-                        itemId: d,
-                        min: 1,
-                        max: 1 + Math.floor(realmId / 5), // Quantities increase slowly
-                        chance: dCfg.matChance
-                    });
-                });
-            }
+        if (enemies.length === 0) {
+            enemies.push(getEnemy('turtle', majorRealm));
+        }
 
-            // 3. Random Equipment (Low chance, appropriate tier)
-            const slot = ['weapon', 'armor', 'helm', 'boots'][idx % 4];
-            mapDrops.push({
-                itemId: `eq_${realmId}_${slot}_common`,
-                min: 1,
-                max: 1,
-                chance: dCfg.equipChance
-            });
+        // Map Drops (Balanced)
+        const mapDrops: DropItem[] = [];
+        mapDrops.push({ itemId: 'spirit_stone', min: dCfg.ssMin, max: dCfg.ssMax, chance: dCfg.ssChance });
 
-            maps.push({
-                id: mapId,
-                name: mapCfg.name,
-                desc: mapCfg.desc,
-                reqRealmId: reqRealmExact,
-                category: realmId > 11 ? '仙界' : (realmId > 5 ? '灵界' : '凡人界'),
-                enemies: enemies,
-                drops: mapDrops
-            });
+        const mats = ['mat_herb', 'mat_wood', 'mat_iron', 'mat_copper', 'mat_crystal', 'mat_essence'];
+        const specialtyMat = mats[m['地图编号'] % mats.length];
+        mapDrops.push({ itemId: specialtyMat, min: 1, max: 1 + Math.floor(majorRealm / 5), chance: dCfg.matChance });
+
+        const slot = ['weapon', 'armor', 'helm', 'boots'][m['地图编号'] % 4];
+        mapDrops.push({ itemId: `loot_eq_${majorRealm}_${slot}`, min: 1, max: 1, chance: dCfg.equipChance });
+
+        maps.push({
+            id: mapId,
+            name: name,
+            desc: `探索等级: ${mapLevel}`,
+            reqRealmId: reqRealmId,
+            // Category determined by Major Realm
+            // 1-3: Mortal (Qi, Foun, Gold)
+            // 4-6: Spirit (Nascent, Spirit, Void)
+            // 7+: Celestial
+            category: majorRealm >= 7 ? '仙界' : (majorRealm >= 4 ? '灵界' : '凡人界'),
+            enemies: enemies,
+            drops: mapDrops
         });
     });
 
-    // 2. Fallback Gen
-    for (let r = 1; r <= 17; r++) {
-        if (!FWJ_CONFIG.find(c => c.realmId === r)) {
-            const dCfg = getRealmDropConfig(r);
-
-            const enemies = [getEnemy('child', r), getEnemy('guard', r), getEnemy('listen', r)];
-            const drops = [
-                { itemId: 'spirit_stone', min: dCfg.ssMin, max: dCfg.ssMax, chance: dCfg.ssChance },
-                { itemId: 'mat_meteor', min: 1, max: 1, chance: dCfg.matChance },
-                { itemId: `eq_${r}_weapon_common`, min: 1, max: 1, chance: dCfg.equipChance }
-            ];
-
-            ['天界', '秘境', '禁地'].forEach((type, idx) => {
-                maps.push({
-                    id: `map_${r}_gen_${idx}`,
-                    name: `${r}阶·${type}`,
-                    desc: '高阶修士探索之地',
-                    reqRealmId: r <= 1 ? 1 : (r - 1) * 10 + 1,
-                    category: '仙界',
-                    enemies: enemies,
-                    drops: drops
-                });
-            });
-        }
-    }
+    // Sort by Realm Req
+    maps.sort((a, b) => a.reqRealmId - b.reqRealmId);
 
     return maps;
 };

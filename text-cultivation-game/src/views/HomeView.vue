@@ -374,9 +374,9 @@ function confirmBreakthrough() {
   recentLogs.value.unshift(`[突破] ${result.message}`);
   
   if (result.success) {
-    addToast(result.message, 'success', 5000);
+    addToast(result.message, 'success', 5000, 'breakthrough');
   } else {
-    addToast(result.message, 'error', 5000);
+    addToast(result.message, 'error', 5000, 'breakthrough');
   }
 }
 </script>

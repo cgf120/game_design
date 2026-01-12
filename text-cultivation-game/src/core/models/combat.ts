@@ -15,6 +15,9 @@ export interface Enemy {
         maxHp: number;
         atk: number;
         def: number;
+        spd?: number;
+        critRate?: number;
+        dodgeRate?: number;
     };
     expReward: number;
     drops: DropItem[];
